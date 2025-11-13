@@ -4,12 +4,14 @@ import SockJS from "sockjs-client";
 let stompClient = null;
 
 export function connectSocket({ roomId, onStateUpdate }) {
-  const socket = new SockJS("http://localhost:8080/ws");
+  // 🔥 Use Render domain for production
+  const socket = new SockJS("https://the-beer-game-backend.onrender.com/ws");
+
   stompClient = new Client({
     webSocketFactory: () => socket,
     reconnectDelay: 3000,
     onConnect: () => {
-      console.log(" Connected to WebSocket");
+      console.log("🟢 Connected to WebSocket");
 
       // Subscribe to room updates
       stompClient.subscribe(`/topic/game/${roomId}`, (message) => {
@@ -33,8 +35,8 @@ export function sendOrderWS({ roomId, role, quantity }) {
       destination: "/app/order",
       body: JSON.stringify({ roomId, role, quantity }),
     });
-    console.log(" Order sent:", { roomId, role, quantity });
+    console.log("📨 Order sent:", { roomId, role, quantity });
   } else {
-    console.warn(" WebSocket not connected yet.");
+    console.warn("⛔ WebSocket not connected yet.");
   }
 }
