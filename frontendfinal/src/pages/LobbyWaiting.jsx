@@ -1,5 +1,5 @@
 // src/pages/LobbyWaiting.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { connectSocket, disconnectSocket } from "../services/socket";
 
@@ -7,11 +7,12 @@ export default function LobbyWaiting() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
-  // Always start empty — state comes ONLY from WebSocket
   const [players, setPlayers] = useState([]);
-
   const [starting, setStarting] = useState(false);
   const [countdown, setCountdown] = useState(3);
+
+  // prevents multiple countdown triggers
+  const countdownStarted = useRef(false);
 
   useEffect(() => {
     if (!roomId) {
@@ -21,13 +22,14 @@ export default function LobbyWaiting() {
     }
 
     const onStateUpdate = (state) => {
-      console.log("WS → Lobby State Update:", state);
+      console.log("📥 WS → Lobby State Update:", state);
 
       const list = Array.isArray(state.players) ? state.players : [];
       setPlayers(list);
 
-      // start game when all 4 joined
-      if (list.length === 4 && !starting) {
+      // ⭐ Safe start trigger
+      if (list.length === 4 && !countdownStarted.current) {
+        countdownStarted.current = true;
         setStarting(true);
         setCountdown(3);
 
@@ -35,6 +37,7 @@ export default function LobbyWaiting() {
           setCountdown((prev) => {
             if (prev === 1) {
               clearInterval(timer);
+              console.log("🚀 Navigating to dashboard");
               navigate(`/dashboard/${roomId}`);
             }
             return prev - 1;
@@ -43,15 +46,19 @@ export default function LobbyWaiting() {
       }
     };
 
+    console.log("🟢 Connecting WS from LobbyWaiting:", roomId);
     connectSocket({ roomId, onStateUpdate });
 
     return () => {
+      console.log("🔴 Disconnecting WS from LobbyWaiting");
       disconnectSocket();
+      countdownStarted.current = false;
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, navigate, starting]);
+    // ONLY depend on roomId
+  }, [roomId, navigate]);
 
+  // ⭐ Starting countdown UI
   if (starting) {
     return (
       <div className="waiting-box">

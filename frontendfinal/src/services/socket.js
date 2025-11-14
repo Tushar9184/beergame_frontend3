@@ -7,28 +7,41 @@ let activeRoomId = null;
 let currentSubscription = null;
 
 export function connectSocket({ roomId, onStateUpdate }) {
-  if (!roomId) return console.error("WS: Missing roomId");
+  if (!roomId) {
+    console.error("WS: Missing roomId");
+    return;
+  }
 
   const token = localStorage.getItem("token");
-  if (!token) return console.error("WS: Missing JWT");
+  if (!token) {
+    console.error("WS: Missing JWT");
+    return;
+  }
 
   const BASE_URL =
     process.env.REACT_APP_API_BASE ||
     "https://the-beer-game-backend.onrender.com";
 
-  // reconnect logic
-  if (stompClient && stompClient.active && activeRoomId === roomId) {
-    console.log("WS already active for same room");
+  // Prevent reconnecting to the same room
+  if (stompClient && stompClient.connected && activeRoomId === roomId) {
+    console.log("WS already active for:", roomId);
     return;
   }
 
-  // clean old
-  if (stompClient) {
-    try { stompClient.deactivate(); } catch {}
-    stompClient = null;
-    currentSubscription = null;
+  // Clean old connections safely
+  try {
+    if (currentSubscription) {
+      currentSubscription.unsubscribe();
+      currentSubscription = null;
+    }
+    if (stompClient) {
+      stompClient.deactivate();
+    }
+  } catch (err) {
+    console.warn("WS cleanup error:", err);
   }
 
+  stompClient = null;
   activeRoomId = roomId;
 
   stompClient = new Client({
@@ -40,28 +53,40 @@ export function connectSocket({ roomId, onStateUpdate }) {
     debug: () => {},
 
     onConnect: () => {
-      console.log("🟢 WS connected:", roomId);
+      console.log("🟢 WS Connected to room:", roomId);
 
-      // ❗ Correct unsubscribing
+      // Ensure no previous subscription
       if (currentSubscription) {
-        try { currentSubscription.unsubscribe(); } catch {}
+        try {
+          currentSubscription.unsubscribe();
+        } catch {}
         currentSubscription = null;
       }
 
-      // ❗ Correct subscription
+      // Subscribe to updated topic
       currentSubscription = stompClient.subscribe(
         `/topic/game/${roomId}`,
         (msg) => {
           try {
-            const data = JSON.parse(msg.body);
-            onStateUpdate(data);
-          } catch (e) {
-            console.error("WS parse error", e);
+            const body = JSON.parse(msg.body);
+            console.log("📥 WS MESSAGE:", body);
+            onStateUpdate(body);
+          } catch (err) {
+            console.error("WS parse error:", err);
           }
         }
       );
 
-      console.log("📡 Subscribed → /topic/game/" + roomId);
+      console.log("📡 Subscribed →", `/topic/game/${roomId}`);
+    },
+
+    onStompError: (frame) => {
+      console.error("WS STOMP ERROR:", frame.headers["message"]);
+      console.error("Details:", frame.body);
+    },
+
+    onWebSocketClose: () => {
+      console.warn("🔴 WS closed");
     },
   });
 
@@ -74,15 +99,21 @@ export function disconnectSocket() {
       currentSubscription.unsubscribe();
       currentSubscription = null;
     }
-    if (stompClient) stompClient.deactivate();
-  } catch {}
+    if (stompClient) {
+      stompClient.deactivate();
+    }
+  } catch (e) {
+    console.warn("WS disconnect error:", e);
+  }
+
   stompClient = null;
   activeRoomId = null;
 }
 
 export function sendOrderWS({ roomId, quantity }) {
   if (!stompClient || !stompClient.connected) {
-    return console.warn("WS not connected");
+    console.warn("WS not connected — can't send order");
+    return;
   }
 
   stompClient.publish({
