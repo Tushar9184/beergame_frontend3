@@ -1,6 +1,8 @@
 // src/components/Card.jsx
 import React, { useState, useEffect } from "react";
-import { sendOrderWS } from "../services/socket";
+// inside Components/dashboard/
+import { sendOrderWS } from "../../services/socket";
+
 
 /**
  * Player Card — Shows inventory, backlog, cost, and order buttons.

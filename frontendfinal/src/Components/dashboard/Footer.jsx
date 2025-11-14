@@ -1,7 +1,7 @@
 // src/pages/HowToPlay.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { connectSocket, disconnectSocket, sendOrderWS } from "../services/socket";
+import { connectSocket, disconnectSocket, sendOrderWS } from "../../services/socket";
 
 export default function HowToPlay() {
   const navigate = useNavigate();
