@@ -1,6 +1,7 @@
-// src/pages/CreateLobby.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+// ❗ Assuming you have this service
+import { createLobby } from "../services/user-service"; 
 
 export default function CreateLobby() {
   const navigate = useNavigate();
@@ -24,39 +25,20 @@ export default function CreateLobby() {
     setCreating(true);
 
     try {
-      const token = localStorage.getItem("token") || "";
+      // We pass the role to the backend
+      const data = await createLobby({ role: role.toUpperCase() });
 
-      const res = await fetch(
-        `${
-          process.env.REACT_APP_API_BASE ||
-          "https://the-beer-game-backend.onrender.com"
-        }/api/game/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          body: JSON.stringify({ role: role.toUpperCase() }),
-        }
-      );
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Create lobby failed: ${res.status} ${txt}`);
-      }
-
-      const data = await res.json();
-      const roomId = (data?.gameId ?? data?.id ?? "").toString().trim();
+      const roomId = (data?.gameId ?? "").toString().trim();
       if (!roomId) throw new Error("Missing gameId in response");
 
-      // save session info
+      // --- 💡 FIX 1: Store session info ---
       localStorage.setItem("role", role.toUpperCase());
       localStorage.setItem("roomId", roomId);
       localStorage.setItem("username", username);
 
-      // ❗ DO NOT STORE PLAYERS HERE — backend does NOT add creator yet
-      localStorage.removeItem("players");
+      // --- 💡 FIX 2: Store the FULL initial game state ---
+      // This state includes you as the first player
+      localStorage.setItem(`gameState_${roomId}`, JSON.stringify(data));
 
       // go to lobby waiting page
       navigate(`/lobby/${roomId}`);
@@ -81,13 +63,11 @@ export default function CreateLobby() {
   return (
     <div className="login-container">
       <h1>Create Lobby 🎮</h1>
-
       <form className="login-form" onSubmit={handleCreateLobby}>
         <div className="input-group">
           <label>Username</label>
           <input type="text" value={username} disabled />
         </div>
-
         <div className="input-group">
           <label>Choose Your Role</label>
           <select value={role} onChange={(e) => setRole(e.target.value)}>
@@ -97,7 +77,6 @@ export default function CreateLobby() {
             <option value="MANUFACTURER">Manufacturer</option>
           </select>
         </div>
-
         <button className="login-btn" type="submit">
           Create Lobby
         </button>
