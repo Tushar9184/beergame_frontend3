@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { joinLobby } from "../services/user-service";
+import { disconnectSocket } from "../services/socket";
 
 export default function JoinLobby() {
   const [gameId, setGameId] = useState("");
@@ -20,27 +21,25 @@ export default function JoinLobby() {
     try {
       setJoining(true);
 
-      const res = await joinLobby(gameId.trim(), role);
+      // Always uppercase role
+      const uppercaseRole = role.toUpperCase();
+
+      const res = await joinLobby(gameId.trim(), uppercaseRole);
 
       const returnedId = (res?.gameId ?? "").toString().trim();
-      if (!returnedId) {
-        throw new Error("Invalid response from backend");
-      }
+      if (!returnedId) throw new Error("Invalid response from backend");
 
       // Save session info
       const username = localStorage.getItem("username") || "You";
       localStorage.setItem("roomId", returnedId);
-      localStorage.setItem("role", role);
+      localStorage.setItem("role", uppercaseRole);
       localStorage.setItem("username", username);
 
-      // Save player list (from backend)
-      if (Array.isArray(res.players)) {
-        localStorage.setItem("players", JSON.stringify(res.players));
-      } else {
-        localStorage.removeItem("players");
-      }
+      // ❗ Do NOT store res.players — WS will send real-time list
+      localStorage.removeItem("players");
 
-      // Redirect to waiting lobby
+      // Clean old WS and navigate
+      disconnectSocket();
       navigate(`/lobby/${returnedId}`);
 
     } catch (err) {

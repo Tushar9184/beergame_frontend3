@@ -27,14 +27,17 @@ export default function CreateLobby() {
       const token = localStorage.getItem("token") || "";
 
       const res = await fetch(
-        `${process.env.REACT_APP_API_BASE || "https://the-beer-game-backend.onrender.com"}/api/game/create`,
+        `${
+          process.env.REACT_APP_API_BASE ||
+          "https://the-beer-game-backend.onrender.com"
+        }/api/game/create`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: token ? `Bearer ${token}` : "",
           },
-          body: JSON.stringify({ role }),
+          body: JSON.stringify({ role: role.toUpperCase() }),
         }
       );
 
@@ -44,22 +47,20 @@ export default function CreateLobby() {
       }
 
       const data = await res.json();
-      const roomId = (data?.gameId ?? "").toString().trim();
+      const roomId = (data?.gameId ?? data?.id ?? "").toString().trim();
       if (!roomId) throw new Error("Missing gameId in response");
 
-      // persist session info
-      localStorage.setItem("role", role);
+      // save session info
+      localStorage.setItem("role", role.toUpperCase());
       localStorage.setItem("roomId", roomId);
       localStorage.setItem("username", username);
 
-      // persist players list returned by backend (creator included)
-      if (Array.isArray(data.players)) {
-        localStorage.setItem("players", JSON.stringify(data.players));
-      } else {
-        localStorage.removeItem("players");
-      }
+      // ❗ DO NOT STORE PLAYERS HERE — backend does NOT add creator yet
+      localStorage.removeItem("players");
 
+      // go to lobby waiting page
       navigate(`/lobby/${roomId}`);
+
     } catch (err) {
       console.error("Lobby creation failed:", err);
       alert("Failed to create lobby ❌ — " + (err.message || ""));
