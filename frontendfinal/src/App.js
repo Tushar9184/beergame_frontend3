@@ -10,6 +10,7 @@ import About from "./pages/About"
 import Learn from "./pages/Learn"
 import CreateRoom from "./pages/CreateRoom"
 import JoinLobby from "./pages/JoinLobby"
+import LobbyWaiting from "./pages/LobbyWaiting"
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
   { path: "/login", element: <LoginPage /> },
@@ -21,7 +22,8 @@ const router = createBrowserRouter([
   {path:"/learn", element:<Learn/>},
   {path:"/contact", element:<Contact/>},
   {path:"/createroom", element:<CreateRoom/>},
-  {path:"/joinlobby",element:<JoinLobby/>}
+  {path:"/joinlobby",element:<JoinLobby/>},
+  { path:"/lobby/:roomId", element:<LobbyWaiting />}
 
 ]);
 

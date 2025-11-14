@@ -33,7 +33,7 @@ export default function Dashboard() {
 
     if (!roomId) {
       alert("Room not found. Please create or join a lobby first!");
-      navigate("/create-lobby");
+      navigate("/createlobby");
       return;
     }
 

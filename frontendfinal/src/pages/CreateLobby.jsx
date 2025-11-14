@@ -1,11 +1,14 @@
+// src/pages/CreateLobby.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createLobby } from "../services/user-service";
 
 export default function CreateLobby() {
   const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [role, setRole] = useState("RETAILER");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -21,32 +24,45 @@ export default function CreateLobby() {
     e.preventDefault();
 
     try {
-      // createLobby(service) will also join the creator with the selected role
+      setCreating(true);
+
       const res = await createLobby(role);
-      // returned id (safely extracted)
       const roomId = (res?.gameId ?? res?.id ?? "").toString().trim();
 
       if (!roomId) {
-        throw new Error("Missing game id from server response");
+        throw new Error("Missing game ID from server.");
       }
 
-      // persist and navigate
+      // Store locally
       localStorage.setItem("role", role);
       localStorage.setItem("roomId", roomId);
 
-      alert(`Lobby created 🎉\nGame ID: ${roomId}`);
-      navigate(`/dashboard/${roomId}`);
+      // Redirect to waiting screen
+      navigate(`/lobby/${roomId}`);
+
     } catch (err) {
       console.error("Lobby creation failed:", err);
       alert("Failed to create lobby ❌");
+      setCreating(false);
     }
   };
+
+  if (creating) {
+    return (
+      <div className="waiting-box">
+        <div className="loader"></div>
+        <h2>Creating Lobby...</h2>
+        <p className="sub">Setting up your game room</p>
+      </div>
+    );
+  }
 
   return (
     <div className="login-container">
       <h1>Create Lobby 🎮</h1>
 
       <form className="login-form" onSubmit={handleCreateLobby}>
+
         <div className="input-group">
           <label>Username</label>
           <input type="text" value={username} disabled />
