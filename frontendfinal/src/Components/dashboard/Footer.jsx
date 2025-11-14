@@ -1,28 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { connectSocket  } from "../../services/socket";
+
 
 
 export default function HowToPlay() {
   const navigate = useNavigate();
   const [waiting, setWaiting] = useState(false);
 
-  useEffect(() => {
-    if (!waiting) return;
-
-    const roomId = localStorage.getItem("roomId");
-
-    // 💥 Start websocket to listen for game state updates
-    connectSocket({
-      roomId,
-      onStateUpdate: (state) => {
-        if (state?.gameStatus === "RUNNING") {
-          console.log("Game is live 🚀 Redirecting...");
-          navigate(`/game/${roomId}`);
-        }
-      },
-    });
-  }, [waiting, navigate]);
+ 
 
   const handleStartGame = () => {
     const roomId = localStorage.getItem("roomId");
