@@ -33,6 +33,7 @@ export default function Dashboard() {
       roomId,
       onStateUpdate: (state) => setGameState(state),
     });
+    console.log("Dashboard mounted, roomId =", roomId);
 
     return () => disconnectSocket();
   }, [roomId, navigate]);
