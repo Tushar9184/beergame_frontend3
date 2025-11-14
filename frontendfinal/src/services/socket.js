@@ -7,17 +7,22 @@ export function connectSocket({ roomId, onStateUpdate }) {
   console.log("Connecting WS to room:", roomId);
 
   const socket = new SockJS("https://the-beer-game-backend.onrender.com/ws");
+  const token = localStorage.getItem("token"); // 💥 REQUIRED
 
   stompClient = new Client({
     webSocketFactory: () => socket,
     reconnectDelay: 3000,
+
+    // 💥 THIS IS THE IMPORTANT PART
+    connectHeaders: {
+      Authorization: `Bearer ${token}`,
+    },
 
     debug: (str) => console.log("STOMP:", str),
 
     onConnect: () => {
       console.log("🟢 WebSocket CONNECTED");
 
-      // Subscribe to the game channel
       const topic = `/topic/game/${roomId}`;
       console.log("Subscribing to:", topic);
 
@@ -33,7 +38,7 @@ export function connectSocket({ roomId, onStateUpdate }) {
 
     onWebSocketError: (e) => {
       console.error("WS ERROR:", e);
-    }
+    },
   });
 
   stompClient.activate();
@@ -53,6 +58,9 @@ export function sendOrderWS({ roomId, role, quantity }) {
     stompClient.publish({
       destination: `/app/game/${roomId}/placeOrder`,
       body: JSON.stringify({ orderAmount: quantity }),
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // optional but safe
+      },
     });
   } else {
     console.warn("❌ Cannot send order — WS not connected");
