@@ -1,12 +1,12 @@
 // src/components/Card.jsx
 import React, { useEffect, useState } from "react";
-import { sendOrderWS } from "../../services/socket"; // adjust import path if needed
+import { sendOrderWS } from "../services/socket"; // <- fixed path (was ../../services/socket)
 
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
 
   // Find my player entry from gameState
-  const me = gameState.players?.find((p) => p.role === roleKey) || {};
+  const me = (gameState.players || []).find((p) => (p.role ?? "").toUpperCase() === roleKey) || {};
 
   const [orderQty, setOrderQty] = useState(me.currentOrder ?? 4);
 
@@ -19,8 +19,12 @@ export default function Card({ role, roomId, gameState = {} }) {
   const changeOrder = (type) => {
     setOrderQty((prev) => {
       const newQty = Math.max(0, type === "inc" ? prev + 1 : prev - 1);
-      // send order via STOMP
-      sendOrderWS({ roomId, quantity: newQty });
+      // send order via STOMP (defensive: ensure roomId)
+      if (!roomId) {
+        console.warn("No roomId found - cannot send order");
+      } else {
+        sendOrderWS({ roomId, quantity: newQty });
+      }
       return newQty;
     });
   };

@@ -7,15 +7,8 @@ export default function LobbyWaiting() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
-  // initialize from localStorage if create just happened
-  const [players, setPlayers] = useState(() => {
-    try {
-      const raw = localStorage.getItem("players");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Always start empty — state comes ONLY from WebSocket
+  const [players, setPlayers] = useState([]);
 
   const [starting, setStarting] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -28,17 +21,12 @@ export default function LobbyWaiting() {
     }
 
     const onStateUpdate = (state) => {
-      // state is expected to be GameStateDTO { gameId, currentWeek, gameStatus, players }
       console.log("WS → Lobby State Update:", state);
 
       const list = Array.isArray(state.players) ? state.players : [];
       setPlayers(list);
 
-      // persist latest
-      try {
-        localStorage.setItem("players", JSON.stringify(list));
-      } catch {}
-
+      // start game when all 4 joined
       if (list.length === 4 && !starting) {
         setStarting(true);
         setCountdown(3);
@@ -60,6 +48,7 @@ export default function LobbyWaiting() {
     return () => {
       disconnectSocket();
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, navigate, starting]);
 
