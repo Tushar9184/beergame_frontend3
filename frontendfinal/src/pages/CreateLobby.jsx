@@ -46,10 +46,10 @@ export default function CreateLobby() {
         <div className="input-group">
           <label>Role</label>
           <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option>Retailer</option>
-            <option>Wholesaler</option>
-            <option>Distributor</option>
-            <option>Factory</option>
+            <option>RETAILER</option>
+            <option>MANUFACTURER</option>
+            <option>DISTRIBUTOR</option>
+            <option>WHOLESALER</option>
           </select>
         </div>
 

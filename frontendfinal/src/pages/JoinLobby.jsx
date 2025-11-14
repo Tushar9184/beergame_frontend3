@@ -52,10 +52,10 @@ export default function JoinLobby() {
             required
           >
             <option value="">-- Choose your role --</option>
-            <option value="Retailer">Retailer</option>
-            <option value="Wholesaler">Wholesaler</option>
-            <option value="Distributor">Distributor</option>
-            <option value="Factory">Factory</option>
+            <option value="RETAILER">Retailer</option>
+            <option value="MANUFACTURER">MANUFACTURER</option>
+            <option value="WHOLESALER">WHOLESALER</option>
+            <option value="DISTRIBUTOR">DISTRIBUTOR</option>
           </select>
         </div>
 
