@@ -1,29 +1,61 @@
-import { startGame } from "../../services/game-service";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { connectSocket  } from "../../services/socket";
+
 
 export default function HowToPlay() {
   const navigate = useNavigate();
+  const [waiting, setWaiting] = useState(false);
 
-  const handleStartGame = async () => {
-    try {
-      const res = await startGame();
-      
-      console.log("Game started ", res);
+  useEffect(() => {
+    if (!waiting) return;
 
-      const roomId = localStorage.getItem("roomId");
-      navigate(`/game/${roomId}`);
-    } catch (error) {
-      alert(" Game can't start yet. Waiting for all players.");
+    const roomId = localStorage.getItem("roomId");
+
+    // 💥 Start websocket to listen for game state updates
+    connectSocket({
+      roomId,
+      onStateUpdate: (state) => {
+        if (state?.gameStatus === "RUNNING") {
+          console.log("Game is live 🚀 Redirecting...");
+          navigate(`/game/${roomId}`);
+        }
+      },
+    });
+  }, [waiting, navigate]);
+
+  const handleStartGame = () => {
+    const roomId = localStorage.getItem("roomId");
+
+    if (!roomId) {
+      alert("Room not found. Please join the game again.");
+      return;
     }
+
+    // 🔥 Switch UI into waiting mode
+    setWaiting(true);
   };
 
   return (
     <div className="how-container">
-      <button className="start-btn" onClick={handleStartGame}>
-        ▶ Start Game
-      </button>
-      
+
+      {waiting ? (
+        <div className="waiting-box">
+          <div className="loader"></div>
+          <p className="waiting-text">
+            ⏳ Waiting for all players to join...
+            <br />
+            <span className="sub">Game will start automatically.</span>
+          </p>
+        </div>
+      ) : (
+        <button className="start-btn" onClick={handleStartGame}>
+          ▶ Start Game
+        </button>
+      )}
+
       <h2 className="how-title">How to Play</h2>
+
       <ul className="how-list">
         <li><span>🎯</span> Goal: Minimize your total supply chain cost</li>
         <li><span>📦</span> Inventory costs $0.50 per unit per week</li>
