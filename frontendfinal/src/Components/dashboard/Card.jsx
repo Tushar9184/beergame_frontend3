@@ -1,6 +1,6 @@
 // src/components/Card.jsx
 import React, { useEffect, useState } from "react";
-import { sendOrderWS } from "../services/socket"; // <- fixed path (was ../../services/socket)
+import { sendOrderWS } from "../../services/socket"; // <- fixed path (was ../../services/socket)
 
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
