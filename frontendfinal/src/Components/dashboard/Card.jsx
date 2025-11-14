@@ -1,19 +1,15 @@
 // src/components/Card.jsx
-import React, { useState, useEffect } from "react";
-import { sendOrderWS } from "../../services/socket";
+import React, { useEffect, useState } from "react";
+import { sendOrderWS } from "../services/socket"; // adjust import path if needed
 
 export default function Card({ role, roomId, gameState = {} }) {
-  const roleKey = role.toUpperCase();
+  const roleKey = (role ?? "").toUpperCase();
 
   // Find my player entry from gameState
-  const me =
-    gameState.players?.find((p) => p.role === roleKey) || {};
+  const me = gameState.players?.find((p) => p.role === roleKey) || {};
 
-  const [orderQty, setOrderQty] = useState(
-    me.currentOrder ?? 4
-  );
+  const [orderQty, setOrderQty] = useState(me.currentOrder ?? 4);
 
-  // Sync with backend state when it updates
   useEffect(() => {
     if (typeof me.currentOrder === "number") {
       setOrderQty(me.currentOrder);
@@ -23,6 +19,7 @@ export default function Card({ role, roomId, gameState = {} }) {
   const changeOrder = (type) => {
     setOrderQty((prev) => {
       const newQty = Math.max(0, type === "inc" ? prev + 1 : prev - 1);
+      // send order via STOMP
       sendOrderWS({ roomId, quantity: newQty });
       return newQty;
     });
@@ -31,7 +28,6 @@ export default function Card({ role, roomId, gameState = {} }) {
   return (
     <div className="card-container">
       <div className="card-item">
-
         <div className="card-top">
           <h3>{roleKey}</h3>
         </div>
@@ -44,7 +40,7 @@ export default function Card({ role, roomId, gameState = {} }) {
 
           <div>
             <p>Backorder</p>
-            <h2>{me.backlog ?? 0} units</h2>
+            <h2>{me.backOrder ?? 0} units</h2>
           </div>
         </div>
 
@@ -54,9 +50,7 @@ export default function Card({ role, roomId, gameState = {} }) {
           <button onClick={() => changeOrder("inc")}>+</button>
         </div>
 
-        <p className="card-cost">
-          Cost: ${(me.totalCost ?? 0).toFixed(2)}
-        </p>
+        <p className="card-cost">Cost: ${(me.totalCost ?? 0).toFixed(2)}</p>
       </div>
     </div>
   );

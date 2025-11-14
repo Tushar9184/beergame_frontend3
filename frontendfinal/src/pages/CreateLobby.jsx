@@ -1,6 +1,6 @@
+// src/pages/CreateLobby.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createLobby } from "../services/user-service";
 
 export default function CreateLobby() {
   const navigate = useNavigate();
@@ -21,28 +21,48 @@ export default function CreateLobby() {
 
   const handleCreateLobby = async (e) => {
     e.preventDefault();
+    setCreating(true);
 
     try {
-      setCreating(true);
+      const token = localStorage.getItem("token") || "";
 
-      // createLobby should return something like { gameId: "...", id: "...", players: [...] }
-      const res = await createLobby(role);
+      const res = await fetch(
+        `${process.env.REACT_APP_API_BASE || "https://the-beer-game-backend.onrender.com"}/api/game/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({ role }),
+        }
+      );
 
-      const roomId = (res?.gameId ?? res?.id ?? "").toString().trim();
-      if (!roomId) {
-        throw new Error("Missing game ID from server.");
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Create lobby failed: ${res.status} ${txt}`);
       }
 
-      // Persist basic session info
+      const data = await res.json();
+      const roomId = (data?.gameId ?? "").toString().trim();
+      if (!roomId) throw new Error("Missing gameId in response");
+
+      // persist session info
       localStorage.setItem("role", role);
       localStorage.setItem("roomId", roomId);
       localStorage.setItem("username", username);
 
-      // Redirect to waiting screen
+      // persist players list returned by backend (creator included)
+      if (Array.isArray(data.players)) {
+        localStorage.setItem("players", JSON.stringify(data.players));
+      } else {
+        localStorage.removeItem("players");
+      }
+
       navigate(`/lobby/${roomId}`);
     } catch (err) {
       console.error("Lobby creation failed:", err);
-      alert("Failed to create lobby ❌");
+      alert("Failed to create lobby ❌ — " + (err.message || ""));
       setCreating(false);
     }
   };

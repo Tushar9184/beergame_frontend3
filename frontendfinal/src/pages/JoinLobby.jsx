@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { joinLobby } from "../services/user-service";
-import "../styles.css";
 
 export default function JoinLobby() {
   const [gameId, setGameId] = useState("");
@@ -21,19 +20,32 @@ export default function JoinLobby() {
     try {
       setJoining(true);
 
-      // joinLobby will save roomId & role into backend game and return GameState
       const res = await joinLobby(gameId.trim(), role);
-      const returnedId = (res?.gameId ?? res?.id ?? gameId).toString().trim();
 
-      // persist locally (used by WS, dashboard etc.)
+      const returnedId = (res?.gameId ?? "").toString().trim();
+      if (!returnedId) {
+        throw new Error("Invalid response from backend");
+      }
+
+      // Save session info
+      const username = localStorage.getItem("username") || "You";
       localStorage.setItem("roomId", returnedId);
       localStorage.setItem("role", role);
+      localStorage.setItem("username", username);
 
-      // redirect to lobby waiting area (real-time player list)
+      // Save player list (from backend)
+      if (Array.isArray(res.players)) {
+        localStorage.setItem("players", JSON.stringify(res.players));
+      } else {
+        localStorage.removeItem("players");
+      }
+
+      // Redirect to waiting lobby
       navigate(`/lobby/${returnedId}`);
+
     } catch (err) {
-      console.error("Error joining lobby:", err);
-      alert("Failed to join lobby ❌\nCheck Game ID or login again.");
+      console.error("❌ Error joining lobby:", err);
+      alert("Failed to join lobby. Please check Game ID or login again.");
       setJoining(false);
     }
   };
@@ -41,7 +53,7 @@ export default function JoinLobby() {
   if (joining) {
     return (
       <div className="waiting-box">
-        <div className="loader" />
+        <div className="loader"></div>
         <h2>Joining Lobby...</h2>
         <p className="sub">Connecting to host & reserving your role</p>
       </div>

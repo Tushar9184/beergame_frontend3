@@ -1,88 +1,130 @@
-// Minimal WebSocket wrapper for the game.
-// Adjust URL to your backend WS endpoint.
-let socket = null;
-let reconnectTimer = null;
+// src/services/socket.js
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+
+let stompClient = null;
+let subscriptions = [];
+let connecting = false;
 
 export function connectSocket({ roomId, onStateUpdate }) {
-  const token = localStorage.getItem("token") || "";
-  const WS_URL = (process.env.REACT_APP_WS_URL || "ws://localhost:8080/ws") + `?roomId=${roomId}`;
-
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    console.log("Socket already open");
+  if (!roomId) {
+    console.error("❌ WS Error → Missing roomId");
     return;
   }
 
-  try {
-    socket = new WebSocket(WS_URL, ["protocolOne"]);
-  } catch (err) {
-    console.error("WS connect error:", err);
-    return;
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.warn("⚠️ WS → No JWT token in localStorage — continuing without auth header");
   }
 
-  socket.onopen = () => {
-    console.log("WS connected", WS_URL);
-    // Optionally send auth message if your backend expects it
-    if (token) {
-      socket.send(JSON.stringify({ type: "AUTH", token }));
-    }
-    // Ask server for initial state
-    socket.send(JSON.stringify({ type: "JOIN_ROOM", roomId }));
-  };
+  if (stompClient && stompClient.active) {
+    console.log("WS already active");
+    return;
+  }
+  if (connecting) {
+    console.log("WS connect already in progress");
+    return;
+  }
+  connecting = true;
 
-  socket.onmessage = (ev) => {
-    try {
-      const payload = JSON.parse(ev.data);
-      // Standardize event shapes:
-      if (payload.type === "GAME_STATE" || payload.type === "STATE_UPDATE") {
-        onStateUpdate && onStateUpdate(payload.data ?? payload);
-      } else if (payload.type === "PLAYERS_UPDATE") {
-        onStateUpdate && onStateUpdate({ players: payload.data });
-      } else {
-        // fallback: give the full payload
-        onStateUpdate && onStateUpdate(payload);
-      }
-    } catch (err) {
-      console.error("WS parse error", err);
-    }
-  };
+  const BASE_URL = process.env.REACT_APP_API_BASE || "https://the-beer-game-backend.onrender.com";
+  const sock = new SockJS(`${BASE_URL}/ws`);
 
-  socket.onclose = (ev) => {
-    console.warn("WS closed:", ev.reason);
-    socket = null;
-    // try to reconnect after short delay
-    if (!reconnectTimer) {
-      reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        connectSocket({ roomId, onStateUpdate });
-      }, 2500);
-    }
-  };
+  stompClient = new Client({
+    webSocketFactory: () => sock,
+    reconnectDelay: 3000,
+    debug: (msg) => {
+      // comment out or route to a logger if noisy
+      console.debug("STOMP:", msg);
+    },
+    connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+    onConnect: () => {
+      connecting = false;
+      console.log("🟢 STOMP connected");
 
-  socket.onerror = (err) => {
-    console.error("WS error:", err);
-  };
+      // cleanup previous subs
+      subscriptions.forEach(s => {
+        try { s.unsubscribe(); } catch (e) {}
+      });
+      subscriptions = [];
+
+      const topics = [`/topic/game/${roomId}`, `/topic/room/${roomId}`];
+      topics.forEach(topic => {
+        try {
+          const sub = stompClient.subscribe(topic, frame => {
+            try {
+              const body = JSON.parse(frame.body);
+              onStateUpdate && onStateUpdate(body);
+            } catch (err) {
+              console.error("WS JSON parse error:", err);
+            }
+          });
+          subscriptions.push(sub);
+          console.log("📡 Subscribed to:", topic);
+        } catch (err) {
+          console.error("❌ Subscription failed:", err);
+        }
+      });
+    },
+    onStompError: frame => {
+      connecting = false;
+      console.error("❌ STOMP ERROR:", frame && frame.headers ? frame.headers['message'] : frame);
+    },
+    onWebSocketClose: evt => {
+      connecting = false;
+      console.warn("🔴 WebSocket closed", evt);
+    },
+    onWebSocketError: err => {
+      connecting = false;
+      console.error("❌ WebSocket error", err);
+    }
+  });
+
+  stompClient.activate();
 }
 
 export function disconnectSocket() {
-  if (socket) {
-    socket.close();
-    socket = null;
-  }
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
+  try {
+    subscriptions.forEach(s => {
+      try { s.unsubscribe(); } catch (e) {}
+    });
+    subscriptions = [];
+
+    if (stompClient) {
+      stompClient.deactivate();
+      stompClient = null;
+      console.log("🔴 STOMP disconnected");
+    }
+  } catch (err) {
+    console.error("❌ Disconnect error:", err);
   }
 }
 
+/**
+ * Send order to backend via STOMP
+ * backend mapping: /app/game/{roomId}/placeOrder
+ */
 export function sendOrderWS({ roomId, quantity }) {
-  if (!socket || socket.readyState !== WebSocket.OPEN) {
-    console.warn("WS not open - cannot send order");
+  if (!stompClient || !stompClient.connected) {
+    console.warn("❌ Cannot send — WS not connected");
     return;
   }
-  const msg = {
-    type: "PLACE_ORDER",
-    roomId,
-    payload: { quantity },
-  };
-  socket.send(JSON.stringify(msg));
+
+  const destination = `/app/game/${roomId}/placeOrder`;
+
+  try {
+    stompClient.publish({
+      destination,
+      body: JSON.stringify({
+        orderAmount: Number(quantity),
+      }),
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    });
+
+    console.log("📤 WS → Sent Order:", { roomId, quantity });
+  } catch (err) {
+    console.error("❌ WS Publish error:", err);
+  }
 }
