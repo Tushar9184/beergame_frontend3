@@ -39,10 +39,15 @@ export const registerUser = async (userData) => {
  */
 export const createLobby = async (role = "RETAILER") => {
   try {
-    const res = await myAxios.post("/api/game/create");
-    const gameId = (res?.data?.gameId ?? res?.data?.id ?? res?.data?.id ?? res?.data).toString?.() ?? res?.data;
-    // join as creator
-    await joinLobby(gameId, role);
+    const normalizedRole = role.toUpperCase();
+
+    const res = await myAxios.post("/api/game/create", { role: normalizedRole });
+
+    const gameId = res.data?.gameId || res.data?.id;
+
+    localStorage.setItem("roomId", gameId);
+    localStorage.setItem("role", normalizedRole);
+
     return res.data;
   } catch (err) {
     console.error("❌ Error creating lobby:", err);
