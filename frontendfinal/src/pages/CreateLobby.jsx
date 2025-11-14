@@ -1,4 +1,3 @@
-// src/pages/CreateLobby.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createLobby } from "../services/user-service";
@@ -26,20 +25,21 @@ export default function CreateLobby() {
     try {
       setCreating(true);
 
+      // createLobby should return something like { gameId: "...", id: "...", players: [...] }
       const res = await createLobby(role);
-      const roomId = (res?.gameId ?? res?.id ?? "").toString().trim();
 
+      const roomId = (res?.gameId ?? res?.id ?? "").toString().trim();
       if (!roomId) {
         throw new Error("Missing game ID from server.");
       }
 
-      // Store locally
+      // Persist basic session info
       localStorage.setItem("role", role);
       localStorage.setItem("roomId", roomId);
+      localStorage.setItem("username", username);
 
       // Redirect to waiting screen
       navigate(`/lobby/${roomId}`);
-
     } catch (err) {
       console.error("Lobby creation failed:", err);
       alert("Failed to create lobby ❌");
@@ -62,7 +62,6 @@ export default function CreateLobby() {
       <h1>Create Lobby 🎮</h1>
 
       <form className="login-form" onSubmit={handleCreateLobby}>
-
         <div className="input-group">
           <label>Username</label>
           <input type="text" value={username} disabled />

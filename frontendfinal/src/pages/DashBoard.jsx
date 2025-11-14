@@ -20,6 +20,7 @@ export default function Dashboard() {
     backlog: {},
     orderBook: {},
     costs: {},
+    players: [],
   });
 
   useEffect(() => {
@@ -41,22 +42,37 @@ export default function Dashboard() {
     connectSocket({
       roomId,
       onStateUpdate: (state) => {
+        // Normalize incoming state keys to what the frontend expects
         console.log("Dashboard received state:", state);
-        setGameState((prev) => ({ ...prev, ...state }));
+
+        setGameState((prev) => {
+          const normalized = {
+            week: state.currentWeek ?? state.week ?? prev.week,
+            demand: state.demand ?? prev.demand,
+            totalCost:
+              state.totalCost ??
+              state.total_cost ??
+              state.gameTotalCost ??
+              prev.totalCost,
+            players: state.players ?? prev.players,
+            inventory: state.inventory ?? prev.inventory,
+            backlog: state.backlog ?? prev.backlog,
+            orderBook: state.orderBook ?? state.orders ?? prev.orderBook,
+            costs: state.costs ?? prev.costs,
+          };
+          return { ...prev, ...normalized };
+        });
       },
     });
 
     return () => disconnectSocket();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, navigate]);
 
   return (
     <div>
       <Header />
-      <Data
-        week={gameState.week}
-        cost={gameState.totalCost}
-        demand={gameState.demand}
-      />
+      <Data week={gameState.week} cost={gameState.totalCost} demand={gameState.demand} />
       <FlowBox />
       <Card role={role} roomId={roomId} gameState={gameState} />
       <Footer />
