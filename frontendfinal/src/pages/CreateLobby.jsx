@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createLobby, joinLobby } from "../services/user-service";
+import { createLobby } from "../services/user-service";
 
 export default function CreateLobby() {
   const navigate = useNavigate();
@@ -21,14 +21,16 @@ export default function CreateLobby() {
     e.preventDefault();
 
     try {
-      // 1️⃣ Create game
-      const res = await createLobby();
-      const roomId = res.gameId.trim();
+      // createLobby(service) will also join the creator with the selected role
+      const res = await createLobby(role);
+      // returned id (safely extracted)
+      const roomId = (res?.gameId ?? res?.id ?? "").toString().trim();
 
-      // 2️⃣ Join game with chosen role
-      await joinLobby(roomId, role);
+      if (!roomId) {
+        throw new Error("Missing game id from server response");
+      }
 
-      // 3️⃣ Save local values
+      // persist and navigate
       localStorage.setItem("role", role);
       localStorage.setItem("roomId", roomId);
 
@@ -45,7 +47,6 @@ export default function CreateLobby() {
       <h1>Create Lobby 🎮</h1>
 
       <form className="login-form" onSubmit={handleCreateLobby}>
-        
         <div className="input-group">
           <label>Username</label>
           <input type="text" value={username} disabled />

@@ -5,7 +5,7 @@ import Data from "../Components/dashboard/Data.jsx";
 import FlowBox from "../Components/dashboard/FlowBox.jsx";
 import Card from "../Components/dashboard/Card.jsx";
 import Footer from "../Components/dashboard/Footer.jsx";
-import { connectSocket, disconnectSocket } from "../services/socket.js";
+import { connectSocket, disconnectSocket } from "../services/socket";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -19,21 +19,32 @@ export default function Dashboard() {
     inventory: {},
     backlog: {},
     orderBook: {},
+    costs: {},
   });
 
-  // ✅ Connect socket on mount
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("❌ No token, redirecting to login...");
+      navigate("/login");
+      return;
+    }
+
     if (!roomId) {
       alert("Room not found. Please create or join a lobby first!");
       navigate("/create-lobby");
       return;
     }
 
+    console.log("Dashboard connecting socket:", roomId);
     connectSocket({
       roomId,
-      onStateUpdate: (state) => setGameState(state),
+      onStateUpdate: (state) => {
+        console.log("Dashboard received state:", state);
+        setGameState((prev) => ({ ...prev, ...state }));
+      },
     });
-    console.log("Dashboard mounted, roomId =", roomId);
 
     return () => disconnectSocket();
   }, [roomId, navigate]);

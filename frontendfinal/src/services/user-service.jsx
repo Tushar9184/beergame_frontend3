@@ -1,10 +1,9 @@
 import { myAxios } from "./Helper";
 
 /* ============================================================
-   AUTH SERVICES
+   AUTH
    ============================================================ */
 
-// ✅ LOGIN
 export const loginUser = async (userData) => {
   const res = await myAxios.post("/auth/login", userData);
   const { token, username, email } = res.data;
@@ -16,37 +15,34 @@ export const loginUser = async (userData) => {
   return res.data;
 };
 
-// ✅ Step 1: Request OTP
 export const getOtpFromBackend = async (userData) => {
   const res = await myAxios.post("/auth/register", userData);
   return res.data;
 };
 
-// ✅ Step 2: Verify OTP → Final register
 export const registerUser = async (userData) => {
   const res = await myAxios.post("/auth/verify", userData);
   const data = res.data;
-
   localStorage.setItem("token", data.token);
   localStorage.setItem("username", data.username);
   localStorage.setItem("email", data.email);
-
   return data;
 };
 
-
 /* ============================================================
-   GAME LOBBY SERVICES
+   GAME LOBBY
    ============================================================ */
 
-// ✅ CREATE LOBBY (Single Game)
-export const createLobby = async () => {
+/**
+ * Create a single-game lobby and join as creator with chosen role.
+ * role should be one of: "RETAILER","WHOLESALER","DISTRIBUTOR","MANUFACTURER"
+ */
+export const createLobby = async (role = "RETAILER") => {
   try {
     const res = await myAxios.post("/api/game/create");
-
-    const { gameId } = res.data;
-    localStorage.setItem("roomId", gameId);
-
+    const gameId = (res?.data?.gameId ?? res?.data?.id ?? res?.data?.id ?? res?.data).toString?.() ?? res?.data;
+    // join as creator
+    await joinLobby(gameId, role);
     return res.data;
   } catch (err) {
     console.error("❌ Error creating lobby:", err);
@@ -54,20 +50,25 @@ export const createLobby = async () => {
   }
 };
 
-// ✅ CREATE ROOM (Team Mode — 4 games)
 export const createRoom = async () => {
   const res = await myAxios.post("/api/room/create", {});
   return res.data;
 };
 
-// ✅ JOIN LOBBY
+/**
+ * Join a lobby
+ * - gameId: string
+ * - role: string (case-insensitive)
+ */
 export const joinLobby = async (gameId, role) => {
   try {
-    const res = await myAxios.post(`/api/game/${gameId}/join`, { role });
+    const normalizedRole = String(role).toUpperCase();
+    const res = await myAxios.post(`/api/game/${gameId}/join`, { role: normalizedRole });
 
-    const returnedGameId = res.data.gameId;
+    // keep gameId stable in localStorage (prefer returned id if present)
+    const returnedGameId = (res?.data?.gameId ?? res?.data?.id ?? gameId).toString();
     localStorage.setItem("roomId", returnedGameId);
-    localStorage.setItem("role", role);
+    localStorage.setItem("role", normalizedRole);
 
     return res.data;
   } catch (err) {

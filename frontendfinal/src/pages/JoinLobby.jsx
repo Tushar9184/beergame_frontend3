@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { joinLobby } from "../services/user-service"; // ✅ import new function
+import { joinLobby } from "../services/user-service";
 import "../styles.css";
 
 export default function JoinLobby() {
-  const [gameId, setGameId] = useState(""); // 👈 changed from teamName
+  const [gameId, setGameId] = useState("");
   const [role, setRole] = useState("");
   const navigate = useNavigate();
 
@@ -17,11 +17,14 @@ export default function JoinLobby() {
     }
 
     try {
-      const res = await joinLobby(gameId, role);
-      alert(`Joined Lobby ✅\nGame ID: ${res.gameId}`);
+      const res = await joinLobby(gameId.trim(), role);
+      const returnedId = (res?.gameId ?? res?.id ?? gameId).toString().trim();
 
-      // navigate to the dashboard
-      navigate(`/dashboard/${res.gameId}`);
+      localStorage.setItem("roomId", returnedId);
+      localStorage.setItem("role", role);
+
+      alert(`Joined Lobby ✅\nGame ID: ${returnedId}`);
+      navigate(`/dashboard/${returnedId}`);
     } catch (err) {
       console.error("Error joining lobby:", err);
       alert("Failed to join lobby ❌\nCheck Game ID or login again.");
@@ -53,9 +56,9 @@ export default function JoinLobby() {
           >
             <option value="">-- Choose your role --</option>
             <option value="RETAILER">Retailer</option>
-            <option value="MANUFACTURER">MANUFACTURER</option>
-            <option value="WHOLESALER">WHOLESALER</option>
-            <option value="DISTRIBUTOR">DISTRIBUTOR</option>
+            <option value="MANUFACTURER">Manufacturer</option>
+            <option value="WHOLESALER">Wholesaler</option>
+            <option value="DISTRIBUTOR">Distributor</option>
           </select>
         </div>
 
