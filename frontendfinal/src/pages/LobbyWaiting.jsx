@@ -6,17 +6,9 @@ export default function LobbyWaiting() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
-  const storedUser = localStorage.getItem("username") || "You";
-  const storedRole = localStorage.getItem("role") || "RETAILER";
-
-  // Add a temporary placeholder so UI shows "1 / 4" immediately for the creator
-  const [players, setPlayers] = useState([
-    { id: "ME", userName: storedUser, role: storedRole },
-  ]);
-
-  const [gameStatus, setGameStatus] = useState("LOBBY");
+  const [players, setPlayers] = useState([]);
   const [starting, setStarting] = useState(false);
-  const [countdown, setCountdown] = useState(3); // 3 sec countdown
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (!roomId) {
@@ -28,53 +20,11 @@ export default function LobbyWaiting() {
     const onStateUpdate = (state) => {
       console.log("WS → Lobby State Update:", state);
 
-      // Game status
-      if (state.gameStatus) setGameStatus(state.gameStatus);
-
-      // Merge players:
-      // - If backend includes the creator, replace placeholder.
-      // - Otherwise keep the placeholder at the top + backend list.
       if (Array.isArray(state.players)) {
-        setPlayers((prev) => {
-          const placeholder = prev.find((p) => p.id === "ME");
-          const backendPlayers = state.players || [];
-
-          // If backendPlayers already contains username of placeholder, just use backendPlayers
-          if (
-            placeholder &&
-            backendPlayers.some(
-              (bp) =>
-                (bp.userName ?? "").toString() === (placeholder.userName ?? "")
-            )
-          ) {
-            return backendPlayers;
-          }
-
-          // else show placeholder first and then backend players (dedup by id if needed)
-          const filteredBackend = backendPlayers.filter(
-            (bp) => bp.id !== "ME"
-          );
-          // remove duplicates by userName (rare) and merge
-          const names = new Set();
-          const merged = [];
-          if (placeholder) {
-            merged.push(placeholder);
-            names.add((placeholder.userName ?? "").toString());
-          }
-          for (const p of filteredBackend) {
-            const uname = (p.userName ?? "").toString();
-            if (!names.has(uname)) {
-              merged.push(p);
-              names.add(uname);
-            }
-          }
-          return merged;
-        });
+        setPlayers(state.players);
       }
 
-      // When all 4 players join → show "game about to start"
-      const currentCount = (state.players ?? players).length;
-      if ((state.players?.length ?? players.length) === 4 && !starting) {
+      if (state.players?.length === 4 && !starting) {
         setStarting(true);
         setCountdown(3);
 
@@ -90,16 +40,11 @@ export default function LobbyWaiting() {
       }
     };
 
-    // Connect WS for lobby updates
     connectSocket({ roomId, onStateUpdate });
 
-    return () => {
-      disconnectSocket();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => disconnectSocket();
   }, [roomId, navigate, starting]);
 
-  // If game is starting → show countdown
   if (starting) {
     return (
       <div className="waiting-box">
@@ -119,16 +64,14 @@ export default function LobbyWaiting() {
       <p className="waiting-text">{players.length} / 4 players connected</p>
 
       <div className="player-list">
-        {players.map((p, idx) => (
-          <div className="player-item" key={p.id ?? idx}>
+        {players.map((p) => (
+          <div className="player-item" key={p.id}>
             <strong>{p.userName}</strong> — {p.role}
           </div>
         ))}
       </div>
 
-      <p className="sub">
-        The game will start automatically when all players join.
-      </p>
+      <p className="sub">The game will start automatically when all players join.</p>
     </div>
   );
 }
