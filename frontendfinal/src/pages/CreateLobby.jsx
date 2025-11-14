@@ -23,7 +23,7 @@ export default function CreateLobby() {
     try {
       // 1️⃣ Create game
       const res = await createLobby();
-      const roomId = res.gameId;
+      const roomId = res.gameId.trim();
 
       // 2️⃣ Join game with chosen role
       await joinLobby(roomId, role);
