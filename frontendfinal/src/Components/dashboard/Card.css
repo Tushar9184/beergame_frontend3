@@ -1,95 +1,127 @@
 /*
- * FINAL Card.css - Styled for a wide, 4-column responsive layout.
+ * FINAL Card.css - Clean, Responsive, and Attractive Pure CSS Styling
+ * This version maximizes card width for readability and applies modern aesthetics.
  */
+
+:root {
+  --primary-color: #3b82f6; /* Blue for highlights/buttons */
+  --secondary-color: #f3f4f6; /* Light gray for backgrounds */
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --success-color: #10b981;
+  --warning-color: #ef4444; /* Red for cost/debt */
+}
 
 /* --- Card Container (Enables Wide Layout) --- */
 .card-container {
   width: 100%;
-  margin: 0;
-  padding: 0 2rem; /* Adds space around the card on desktop */
+  padding: 2rem 1rem; /* Added vertical padding */
   box-sizing: border-box;
+  display: flex;
+  justify-content: center; /* Center the card item */
 }
 
 .card-item {
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 20px; /* More rounded */
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); /* Stronger, softer shadow */
+  border: none; /* Relying on shadow */
   overflow: hidden;
-  border: 1px solid #e7e7e7;
-  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  max-width: 900px; /* Limits the overall card width on very large screens */
-  margin: 0 auto; /* Centers the card */
+  width: 100%; /* Take full width of container */
+  max-width: 1000px; /* Increased max-width for a wider card */
+  min-width: 320px;
+  transition: transform 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* --- Card Header --- */
+.card-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Card Header (Fixed for Overflow & Aesthetic) --- */
 .card-top {
-  padding: 1.75rem 2.5rem;
-  background: linear-gradient(135deg, #f9fafb 0%, #edf1f5 100%);
-  border-bottom: 1px solid #e7e7e7;
+  padding: 2rem 2.5rem;
+  background: linear-gradient(145deg, var(--secondary-color) 0%, #e0e7ef 100%);
+  border-bottom: 2px solid #d1d5db; /* Clearer separation */
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 .card-top h3 {
   margin: 0;
-  font-size: 1.8rem;
-  color: #1a202c;
-  font-weight: 700;
+  font-size: 2.2rem;
+  color: var(--text-dark);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  white-space: normal;
 }
 
 .card-top p {
-  margin: 0;
+  margin: 0.5rem 0 0 0;
   font-size: 1.1rem;
-  color: #6b7280;
+  color: var(--text-light);
   font-weight: 600;
+  background-color: #ffffff;
+  padding: 0.25rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* --- Stats Grid (4 Columns) --- */
 .card-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Default 4 equal columns */
+  grid-template-columns: repeat(4, 1fr);
+  /* Using a subtle, dark grid for visual impact */
   gap: 1px;
-  background: #e7e7e7;
-  border-bottom: 1px solid #e7e7e7;
+  background: #d1d5db;
+  border-bottom: 1px solid #d1d5db;
 }
 
 .stat-box {
   background: #ffffff;
-  padding: 1.5rem 1rem;
+  padding: 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-start; /* Align contents to the left for better readability */
+  justify-content: space-between;
+  align-items: flex-start;
   text-align: left;
+  transition: background-color 0.2s;
+}
+
+.stat-box:hover {
+  background-color: var(--secondary-color);
 }
 
 .stat-box p {
-  margin: 0 0 0.6rem 0;
-  font-size: 0.95rem;
-  color: #6b7280;
-  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  text-transform: uppercase;
 }
 
 .stat-box h2 {
   margin: 0;
-  font-size: 1.9rem;
-  color: #111827;
-  font-weight: 800;
-  line-height: 1.2;
+  font-size: 2.2rem;
+  color: var(--text-dark);
+  font-weight: 900;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Highlighted style for the total cost */
+/* Specific styling for the total cost */
 .stat-box.total-cost h2 {
-  color: #d9480f;
+  color: var(--warning-color);
 }
 
 /* --- Order Form --- */
@@ -98,12 +130,13 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  background: #fcfcfc;
 }
 
 .card-order-form label {
   font-size: 1.2rem;
-  font-weight: 700;
-  color: #374151;
+  font-weight: 800;
+  color: var(--text-dark);
   text-align: center;
   margin-bottom: 0.5rem;
 }
@@ -111,104 +144,101 @@
 /* Quantity Picker Controls */
 .order-input-controls {
   display: flex;
-  height: 60px;
+  height: 60px; /* Slightly taller */
   max-width: 300px;
   margin: 0 auto;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid var(--primary-color); /* Main accent border */
 }
 
 .order-input-controls button {
   flex-basis: 60px;
   font-size: 2rem;
-  font-weight: 600;
-  color: #374151;
-  background: #f1f5f9;
+  font-weight: 900;
+  color: #ffffff;
+  background-color: var(--primary-color);
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .order-input-controls button:hover {
-  background: #e2e8f0;
-  transform: translateY(-1px);
+  background-color: #2563eb;
 }
 
 .order-input-controls button:active {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 .order-input-controls input {
   flex-grow: 1;
   text-align: center;
   font-size: 2rem;
-  font-weight: 800;
-  color: #111827;
-  border: 1px solid #cbd5e1;
-  border-top: none;
-  border-bottom: none;
-  width: auto;
+  color: var(--text-dark);
+  font-weight: 700;
+  border: none;
   padding: 0 0.5rem;
-  background-color: #ffffff;
+  outline: none;
+  /* Remove default number arrows */
+  -moz-appearance: textfield;
 }
 
-/* Hide the ugly default spinners */
 .order-input-controls input::-webkit-outer-spin-button,
 .order-input-controls input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.order-input-controls input[type="number"] {
-  -moz-appearance: textfield;
-}
+
 
 /* --- Submit Button --- */
 .submit-order-btn {
-  padding: 1rem 1.5rem;
-  font-size: 1.1rem;
+  padding: 1.2rem 1.5rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #ffffff;
-  background: #22c55e;
+  background-color: var(--success-color);
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  margin-top: 1rem;
-  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
-  width: fit-content;
-  align-self: center;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .submit-order-btn:hover {
-  background: #16a34a;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(34, 197, 94, 0.4);
+  background-color: #059669;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
 }
 
 .submit-order-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 5px rgba(34, 197, 94, 0.2);
+  transform: translateY(1px);
 }
 
 /* --- Responsive Adjustments --- */
+@media (max-width: 900px) {
+  /* On slightly smaller screens, reduce padding */
+  .card-top {
+    padding: 1.5rem 1.5rem;
+  }
+  .stat-box {
+    padding: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   /* On tablets, switch to 2 columns */
   .card-stats-grid {
-    grid-template-columns: repeat(2, 1fr); 
+    grid-template-columns: repeat(2, 1fr);
   }
-
-  .stat-box {
-    padding: 1rem 1.5rem;
-    align-items: flex-start;
-    text-align: left;
+  .card-item {
+      max-width: 700px;
   }
-
   .card-container {
-    padding: 0 1rem;
+      padding: 1rem 0.5rem;
   }
 }
 
@@ -216,10 +246,15 @@
   /* On phones, switch to 1 column */
   .card-stats-grid {
     grid-template-columns: 1fr;
+    gap: 0; /* Remove gap on single column layout */
   }
-  
-  .card-top {
-    flex-direction: column;
-    align-items: flex-start;
+  .card-item {
+      border-radius: 10px;
+  }
+  .card-top h3 {
+      font-size: 1.8rem;
+  }
+  .card-order-form {
+      padding: 1.5rem;
   }
 }
