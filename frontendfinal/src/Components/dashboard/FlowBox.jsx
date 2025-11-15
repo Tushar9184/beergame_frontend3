@@ -3,7 +3,7 @@ import React from "react";
 export default function FlowBox() {
   // Logic is the same, but we compare all as uppercase for safety
   const userRole = localStorage.getItem("role")?.toUpperCase();
-  const roles = ["RETAILER", "WHOLESALER", "DISTRIBUTOR", "FACTORY"];
+  const roles = ["RETAILER", "WHOLESALER", "DISTRIBUTOR", "MANUFACTURER"];
 
   return (
     <div className="flow-container">

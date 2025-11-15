@@ -45,8 +45,10 @@ function WeekTimeline({ currentWeek, festiveWeeks = [] }) {
  * The main Data component
  */
 export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
+  console.log("Data component received festiveWeeks:", festiveWeeks);
   return (
     <>
+    
       {/* 1. The 4 Stats Boxes (no changes) */}
       <div className="data-container">
         {/* Current Week */}

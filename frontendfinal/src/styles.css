@@ -2356,9 +2356,10 @@ body {
 }
 
 .week-circle.festive-week {
-  border-color: #E53E3E;
-  color: #E53E3E;
-  font-weight: 700;
+  background-color: #ffc107; /* Example: A gold color */
+  color: #000;
+  border-color: #e6ac00;
+  font-weight: bold;
 }
 
 .week-circle.active-week {
@@ -2369,6 +2370,7 @@ body {
   transform: scale(1.1);
   box-shadow: 0 0 10px rgba(230, 149, 0, 0.5);
 }
+
 
 .week-circle.festive-week.active-week {
   background: #E53E3E;
@@ -2437,4 +2439,166 @@ body {
 .player-status-list li.ready {
   color: var(--text-color-light);
   text-decoration: line-through;
+}
+/* * Card.css
+ * Place this in /components/dashboard/Card.css
+ */
+
+.card-container {
+  width: 100%;
+  max-width: 500px; /* Card won't get too wide */
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.card-item {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #e7e7e7;
+  transition: all 0.3s ease;
+}
+
+/* --- Card Header --- */
+.card-top {
+  padding: 1.5rem;
+  background: #f9fafb; /* A very light gray */
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.card-top h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.5rem;
+  color: #111827;
+}
+
+.card-top p {
+  margin: 0;
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* --- New 2x2 Stats Grid --- */
+.card-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columns */
+  gap: 1px; /* Creates fine separator lines */
+  background: #e7e7e7; /* Separator color */
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.stat-box {
+  background: #ffffff;
+  padding: 1.25rem;
+}
+
+.stat-box p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.stat-box h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: #111827;
+  /* For 'X units' */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Special style for the total cost */
+.stat-box.total-cost h2 {
+  color: #d9480f; /* A shade of red/orange for cost */
+  font-weight: 700;
+}
+
+/* --- New Order Form --- */
+.card-order-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-order-form label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Quantity Picker Controls */
+.order-input-controls {
+  display: flex;
+  height: 50px;
+}
+
+.order-input-controls button {
+  flex-basis: 50px; /* Set a fixed width */
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.order-input-controls button:hover {
+  background: #e5e7eb;
+}
+
+.order-input-controls button:first-of-type {
+  border-radius: 8px 0 0 8px;
+  border-right: none;
+}
+
+.order-input-controls button:last-of-type {
+  border-radius: 0 8px 8px 0;
+  border-left: none;
+}
+
+.order-input-controls input {
+  flex-grow: 1; /* Take up remaining space */
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  border-left: none;
+  border-right: none;
+  width: 100px; /* Start width */
+  padding: 0 0.5rem;
+}
+
+/* Hide the ugly default spinners on number inputs */
+.order-input-controls input::-webkit-outer-spin-button,
+.order-input-controls input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.order-input-controls input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* --- Submit Button --- */
+.submit-order-btn {
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #22c55e; /* A nice green */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.submit-order-btn:hover {
+  background: #16a34a; /* Darker green on hover */
 }

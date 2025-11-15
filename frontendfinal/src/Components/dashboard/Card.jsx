@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { sendOrderWS } from "../../services/socket";
+import "./Card.css"; // ✅ Import the new CSS file
 
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
@@ -11,68 +12,59 @@ export default function Card({ role, roomId, gameState = {} }) {
 
   const [orderQty, setOrderQty] = useState(me.currentOrder ?? 4);
 
-  // This effect still ensures the order amount resets when a new week starts
   useEffect(() => {
     if (typeof me.currentOrder === "number") {
       setOrderQty(me.currentOrder);
     }
   }, [me.currentOrder]);
 
-  // --- LOGIC UPDATES ---
-  // This now *only* updates the local number
   const changeOrder = (type) => {
     setOrderQty((prev) => {
       return Math.max(0, type === "inc" ? prev + 1 : prev - 1);
     });
   };
 
-  // This handles typing in the new input box
   const handleInputChange = (e) => {
     const newQty = Math.max(0, Number(e.target.value));
     setOrderQty(newQty);
   };
 
-  // This is the new function to finally send the order
   const handlePlaceOrder = (e) => {
-    e.preventDefault(); // Stop the form from refreshing the page
+    e.preventDefault();
     if (!roomId) {
       console.warn("No roomId found - cannot send order");
       return;
     }
-    // Send the final quantity
     sendOrderWS({ roomId, quantity: orderQty });
-    // The Dashboard component will handle showing the "Waiting..."
-    // screen when the new state arrives.
   };
 
   return (
     <div className="card-container">
       <div className="card-item">
+        {/* --- CARD HEADER --- */}
         <div className="card-top">
           <h3>{roleKey}</h3>
           <p>{me.userName ?? "Player"}</p>
         </div>
 
-        {/* --- STATS UPDATED WITH ICONS --- */}
-        <div className="card-stats">
-          <div>
+        {/* --- NEW 2x2 STATS GRID --- */}
+        <div className="card-stats-grid">
+          <div className="stat-box">
             <p>📦 Inventory</p>
             <h2>{me.inventory ?? 0} units</h2>
           </div>
-          <div>
+          <div className="stat-box">
             <p>⚠️ Backlog</p>
             <h2>{me.backlog ?? 0} units</h2>
           </div>
-          <div>
+          <div className="stat-box">
             <p>🚚 Incoming</p>
             <h2>{me.incomingShipment ?? 0} units</h2>
           </div>
-        </div>
-
-        {/* --- COST MOVED HERE --- */}
-        <div className="card-total-cost">
-          <p>Your Total Cost</p>
-          <h2>${(me.totalCost ?? 0).toFixed(2)}</h2>
+          <div className="stat-box total-cost">
+            <p>💰 Total Cost</p>
+            <h2>${(me.totalCost ?? 0).toFixed(2)}</h2>
+          </div>
         </div>
 
         {/* --- NEW ORDER FORM --- */}
@@ -89,7 +81,8 @@ export default function Card({ role, roomId, gameState = {} }) {
               value={orderQty}
               onChange={handleInputChange}
             />
-            <button typeG="button" onClick={() => changeOrder("inc")}>
+            {/* 🪲 Bug Fix: Was 'typeG', changed to 'type' */}
+            <button type="button" onClick={() => changeOrder("inc")}>
               +
             </button>
           </div>
