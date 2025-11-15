@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "./components/dashboard/Header.jsx";
-import Data from "./components/dashboard/Data.jsx";
-import FlowBox from "./components/dashboard/FlowBox.jsx";
-import Card from "./components/dashboard/Card.jsx";
-import HowToPlay from "./components/dashboard/Footer.jsx";
+import Header from "../Components/dashboard/Header.jsx";
+import Data from "../Components/dashboard/Data.jsx";
+import FlowBox from "../Components/dashboard/FlowBox.jsx";
+import Card from "../Components/dashboard/Card.jsx";
+import HowToPlay from "../Components/dashboard/Footer.jsx";
 import { connectSocket, disconnectSocket } from "../services/socket";
 
 // We removed the inline 'waitingBoxStyle'
