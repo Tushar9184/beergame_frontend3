@@ -4,8 +4,8 @@ import Header from "./components/dashboard/Header.jsx";
 import Data from "./components/dashboard/Data.jsx";
 import FlowBox from "./components/dashboard/FlowBox.jsx";
 import Card from "./components/dashboard/Card.jsx";
-import Footer from "./components/dashboard/Footer.jsx";
-import { connectSocket, disconnectSocket } from "./services/socket";
+import HowToPlay from "./components/dashboard/Footer.jsx";
+import { connectSocket, disconnectSocket } from "../services/socket";
 
 // We removed the inline 'waitingBoxStyle'
 // It is now in your CSS file as ".waiting-box"
@@ -111,7 +111,7 @@ export default function Dashboard() {
           <Card role={role} roomId={roomId} gameState={gameState} />
         )}
       </div>
-
+        <HowToPlay/>
       {/* <Footer /> */}
     </div>
   );
