@@ -46,6 +46,15 @@ function WeekTimeline({ currentWeek, festiveWeeks = [] }) {
  */
 export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
   console.log("Data component received festiveWeeks:", festiveWeeks);
+  const redDotStyle = {
+    display: 'inline-block',
+    height: '10px',
+    width: '10px',
+    backgroundColor: 'red',
+    borderRadius: '50%',
+    marginRight: '6px',
+    verticalAlign: 'middle',
+  };
   return (
     <>
     
