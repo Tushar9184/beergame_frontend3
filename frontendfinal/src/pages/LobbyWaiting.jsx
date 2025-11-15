@@ -32,17 +32,26 @@ export default function LobbyWaiting() {
       return;
     }
 
+    // --- 💡 FIX 1: Save state on *every* update ---
     const onStateUpdate = (newState) => {
       console.log("📥 WS → Lobby State Update:", newState);
+      // Save the new state to our component
       setGameState(newState);
+      // ALSO save it to localStorage so the next page can read it
+      localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
     };
 
     console.log("🟢 Connecting WS from LobbyWaiting:", roomId);
     connectSocket({ roomId, onStateUpdate });
 
+    // --- 💡 FIX 2: Only disconnect if we are NOT starting the game ---
     return () => {
-      console.log("🔴 Disconnecting WS from LobbyWaiting");
-      disconnectSocket();
+      // If countdownStarted is true, it means we're navigating
+      // to the game, so we *keep the socket alive*.
+      if (!countdownStarted.current) {
+        console.log("🔴 Disconnecting WS from LobbyWaiting (navigated away)");
+        disconnectSocket();
+      }
       countdownStarted.current = false;
     };
   }, [roomId, navigate]);

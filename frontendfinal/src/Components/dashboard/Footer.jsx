@@ -8,10 +8,21 @@ export default function HowToPlay() {
   const roomId = localStorage.getItem("roomId");
   const myRole = localStorage.getItem("role")?.toUpperCase();
 
-  const [waiting, setWaiting] = useState(false);
-  const [gameState, setGameState] = useState(null);
+  // ✅ --- FIX 1: Initialize state from localStorage ---
+  // This reads the "IN_PROGRESS" state saved by LobbyWaiting.jsx
+  const [gameState, setGameState] = useState(() => {
+    const cachedState = localStorage.getItem(`gameState_${roomId}`);
+    if (cachedState) {
+      try {
+        return JSON.parse(cachedState);
+      } catch (e) {
+        console.error("Failed to parse cached state", e);
+      }
+    }
+    // Default if nothing is cached (shouldn't happen)
+    return { players: [], gameStatus: "LOBBY" };
+  });
 
-  // ✅ FIX: State for the user's order input
   const [orderAmount, setOrderAmount] = useState(4); 
   const [orderPlaced, setOrderPlaced] = useState(false);
 
@@ -25,10 +36,14 @@ export default function HowToPlay() {
     const onStateUpdate = (state) => {
       console.log("WS → HowToPlay Update", state);
       setGameState(state);
+      // Also, keep localStorage in sync
+      localStorage.setItem(`gameState_${roomId}`, JSON.stringify(state));
     };
 
+    // This will re-use the existing connection from LobbyWaiting
     connectSocket({ roomId, onStateUpdate });
 
+    // We only disconnect when this page is left
     return () => disconnectSocket();
   }, [roomId, navigate]);
 
@@ -36,7 +51,7 @@ export default function HowToPlay() {
   useEffect(() => {
     if (!gameState) return;
 
-    // ✅ FIX: Check for IN_PROGRESS, not RUNNING
+    // ✅ FIX 2: Check for IN_PROGRESS
     if (gameState.gameStatus === "IN_PROGRESS") {
       
       // Navigate away if we're past week 1
@@ -48,25 +63,22 @@ export default function HowToPlay() {
       // Update our order amount with the backend's suggestion
       if (!orderPlaced) {
         const me = gameState.players?.find((p) => p.role === myRole);
+        // Use ?? 4 to set a default if currentOrder is 0 or null
         setOrderAmount(me?.currentOrder ?? 4);
       }
     }
   }, [gameState, myRole, orderPlaced, navigate, roomId]);
 
   // --- Handlers ---
-
-  const handleStartGame = () => {
-    setWaiting(true);
-    // Note: You need a way to tell the backend to start
-    // This button currently does nothing
-  };
+  
+  // This button is not needed, game starts automatically
+  // const handleStartGame = () => { ... };
 
   const handlePlaceOrder = (e) => {
-    e.preventDefault(); // This is a form, so prevent reload
+    e.preventDefault(); 
     if (!gameState) return;
 
-    const qty = Number(orderAmount); // Get quantity from our state
-
+    const qty = Number(orderAmount); 
     sendOrderWS({ roomId, quantity: qty });
     setOrderPlaced(true);
   };
@@ -77,9 +89,9 @@ export default function HowToPlay() {
 
   const gameStatus = gameState?.gameStatus;
   const me = gameState?.players?.find((p) => p.role === myRole);
-  const iAmReady = me?.isReadyForNextTurn; // Backend sets this to true after order
+  const iAmReady = me?.isReadyForNextTurn; 
 
-  // ✅ FIX: Check for IN_PROGRESS, not RUNNING
+  // ✅ FIX 3: Check for IN_PROGRESS
   if (gameStatus === "IN_PROGRESS") {
     
     // If order is placed, show waiting screen
@@ -87,7 +99,7 @@ export default function HowToPlay() {
       return (
         <div className="waiting-box">
           <div className="loader"></div>
-          <h2>Waiting for other players…</h2>
+          <h2>Waiting for other players to submit Week 1 order…</h2>
         </div>
       );
     }
@@ -97,7 +109,6 @@ export default function HowToPlay() {
       <div className="how-container">
         <h2 className="how-title">Week 1 — Place Your First Order</h2>
         
-        {/* ✅ FIX: Added a form and input field */}
         <form className="place-order-form" onSubmit={handlePlaceOrder}>
           <div className="input-group">
             <label>Your Order:</label>
@@ -125,43 +136,14 @@ export default function HowToPlay() {
     );
   }
 
-  // Waiting screen after clicking Start Game
-  if (waiting) {
-    return (
-      <div className="waiting-box">
-        <div className="loader"></div>
-        <p className="waiting-text">
-          ⏳ Waiting for game to start...
-          <br />
-          <span className="sub">Game will begin soon.</span>
-        </p>
-      </div>
-    );
-  }
-
-  // Default: Pre-game Lobby Screen
+  // Default: Pre-game "How To" Screen (if status is still LOBBY)
+  // This screen will only show for a split second
   return (
-    <div className="how-container">
-      {/* Host Start Button */}
-      {myRole === "RETAILER" ? (
-        <button className="start-btn" onClick={handleStartGame}>
-          ▶ Start Game
-        </button>
-      ) : (
-        <p className="waiting-text">
-          Waiting for host to start the game…
-        </p>
-      )}
-
-      <h2 className="how-title">How to Play</h2>
-
-      <ul className="how-list">
-        <li><span>🎯</span> Goal: Minimize your total supply chain cost</li>
-        <li><span>📦</span> Inventory costs $0.50 per unit per week</li>
-        <li><span>⚠️</span> Backlog costs $1.00 per unit per week</li>
-        <li><span>🚚</span> Orders & shipments take 2 weeks to arrive</li>
-        <li><span>🌊</span> Small demand changes cause big upstream swings</li>
-      </ul>
-    </div>
+    <div className="waiting-box">
+       <div className="loader"></div>
+       <p className="waiting-text">
+         ⏳ Game is starting...
+       </p>
+     </div>
   );
 }
