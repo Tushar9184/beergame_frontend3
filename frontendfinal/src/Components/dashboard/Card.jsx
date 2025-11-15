@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { sendOrderWS } from "../../services/socket";
-import "./Card.css"; // ✅ Import the new CSS file
+
 
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
