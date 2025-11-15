@@ -11,7 +11,7 @@ import Learn from "./pages/Learn"
 import CreateRoom from "./pages/CreateRoom"
 import JoinLobby from "./pages/JoinLobby"
 import LobbyWaiting from "./pages/LobbyWaiting"
-import HowToPlay from "./pages/HowToPlay";
+import HowToPlay from "./Components/dashboard/Footer.jsx";
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
   { path: "/login", element: <LoginPage /> },
