@@ -6,8 +6,7 @@ export default function LobbyWaiting() {
   const { roomId } = useParams();
   const navigate = useNavigate();
 
-  // --- 💡 FIX 1: Initialize state from localStorage ---
-  // This loads the state you saved in CreateLobby/JoinLobby
+  // Initialize state from localStorage
   const [gameState, setGameState] = useState(() => {
     const cachedState = localStorage.getItem(`gameState_${roomId}`);
     if (cachedState) {
@@ -17,18 +16,15 @@ export default function LobbyWaiting() {
         console.error("Failed to parse cached state", e);
       }
     }
-    // Default if nothing is cached
     return { players: [], gameStatus: "LOBBY" };
   });
 
-  // Destructure for easy access in UI
   const { players, gameStatus } = gameState;
-
   const [starting, setStarting] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const countdownStarted = useRef(false);
 
-  // --- 💡 FIX 2: Main connect/disconnect effect (runs once) ---
+  // Main connect/disconnect effect
   useEffect(() => {
     if (!roomId) {
       alert("No room ID found");
@@ -36,7 +32,6 @@ export default function LobbyWaiting() {
       return;
     }
 
-    // This function will be called by the socket service
     const onStateUpdate = (newState) => {
       console.log("📥 WS → Lobby State Update:", newState);
       setGameState(newState);
@@ -50,14 +45,13 @@ export default function LobbyWaiting() {
       disconnectSocket();
       countdownStarted.current = false;
     };
-  }, [roomId, navigate]); // This effect only runs if roomId changes
+  }, [roomId, navigate]);
 
-  // --- 💡 FIX 3: Check-for-start effect (runs on every state update) ---
+  // Check-for-start effect
   useEffect(() => {
-    // This logic runs on initial load AND on every WS update
     if (
       players.length === 4 &&
-      gameStatus === "IN_PROGRESS" &&
+      gameStatus === "IN_PROGRESS" && // This status comes from your backend
       !countdownStarted.current
     ) {
       countdownStarted.current = true;
@@ -68,9 +62,10 @@ export default function LobbyWaiting() {
         setCountdown((prev) => {
           if (prev === 1) {
             clearInterval(timer);
-            console.log("🚀 Navigating to dashboard");
-            // We DON'T disconnect the socket, the dashboard needs it
-            navigate(`/dashboard/${roomId}`);
+            console.log("🚀 Navigating to Week 1 Order Page");
+            
+            // ✅ FIX: Navigate to /howtoplay for Week 1 order
+            navigate(`/howtoplay`); 
           }
           return prev - 1;
         });
@@ -78,7 +73,7 @@ export default function LobbyWaiting() {
     }
   }, [players, gameStatus, roomId, navigate]); // Re-run if state changes
 
-  // ... (rest of your component is fine)
+  
   if (starting) {
     return (
       <div className="waiting-box">
