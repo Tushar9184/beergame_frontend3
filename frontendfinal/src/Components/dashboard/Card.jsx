@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { sendOrderWS } from "../../services/socket";
-
+import "./Card.css"; // Ensure this import is present
 
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
@@ -47,25 +47,29 @@ export default function Card({ role, roomId, gameState = {} }) {
           <p>{me.userName ?? "Player"}</p>
         </div>
 
-        {/* --- NEW 2x2 STATS GRID --- */}
-        <div className="card-stats-grid">
-          <div className="stat-box">
-            <p>📦 Inventory</p>
-            <h2>{me.inventory ?? 0} units</h2>
-          </div>
-          <div className="stat-box">
-            <p>⚠️ Backlog</p>
-            <h2>{me.backlog ?? 0} units</h2>
-          </div>
-          <div className="stat-box">
-            <p>🚚 Incoming</p>
-            <h2>{me.incomingShipment ?? 0} units</h2>
-          </div>
-          <div className="stat-box total-cost">
-            <p>💰 Total Cost</p>
-            <h2>${(me.totalCost ?? 0).toFixed(2)}</h2>
-          </div>
-        </div>
+       
+<div className="card-stats-grid">
+    {/* 1. INVENTORY */}
+    <div className="stat-box">
+        <p>📦 Inventory</p>
+        <h2>{me.inventory ?? 0} units</h2>
+    </div>
+    {/* 2. BACKLOG */}
+    <div className="stat-box">
+        <p>⚠️ Backlog</p>
+        <h2>{me.backlog ?? 0} units</h2>
+    </div>
+    {/* 3. INCOMING SHIPMENT */}
+    <div className="stat-box">
+        <p>🚚 Incoming</p>
+        <h2>{me.incomingShipment ?? 0} units</h2>
+    </div>
+    {/* 4. TOTAL COST */}
+    <div className="stat-box total-cost">
+        <p>💰 Total Cost</p>
+        <h2>${(me.totalCost ?? 0).toFixed(2)}</h2>
+    </div>
+</div>
 
         {/* --- NEW ORDER FORM --- */}
         <form className="card-order-form" onSubmit={handlePlaceOrder}>
@@ -81,7 +85,6 @@ export default function Card({ role, roomId, gameState = {} }) {
               value={orderQty}
               onChange={handleInputChange}
             />
-            {/* 🪲 Bug Fix: Was 'typeG', changed to 'type' */}
             <button type="button" onClick={() => changeOrder("inc")}>
               +
             </button>

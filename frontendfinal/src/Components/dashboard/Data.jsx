@@ -79,7 +79,7 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
             <span>📥</span>
           </div>
           <div className="data-text">
-            <p>customer Demand</p>
+            <p>Outgoing Shipment</p>
             <h2>{myOrder} units</h2>
           </div>
         </div>

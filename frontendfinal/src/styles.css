@@ -2356,9 +2356,9 @@ body {
 }
 
 .week-circle.festive-week {
-  background-color: #ffc107; /* Example: A gold color */
+  background-color: red; /* Example: A gold color */
   color: #000;
-  border-color: #e6ac00;
+  border-color: red;
   font-weight: bold;
 }
 
@@ -2601,4 +2601,225 @@ body {
 
 .submit-order-btn:hover {
   background: #16a34a; /* Darker green on hover */
+}
+/*
+ * Card.css - Reworked for wider layout and better aesthetics
+ */
+
+.card-container {
+  width: 100%;
+  margin: 0;
+  padding: 0 2rem;
+  box-sizing: border-box;
+}
+
+.card-item {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #e7e7e7;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px; /* Limits card width */
+  margin: 0 auto; /* Centers the card */
+}
+
+/* --- Card Header --- */
+.card-top {
+  padding: 1.75rem 2.5rem;
+  background: linear-gradient(135deg, #f9fafb 0%, #edf1f5 100%);
+  border-bottom: 1px solid #e7e7e7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-top h3 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #1a202c;
+  font-weight: 700;
+}
+
+.card-top p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* --- Stats Grid (4 Columns) --- */
+.card-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+  gap: 1px;
+  background: #e7e7e7;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.stat-box {
+  background: #ffffff;
+  padding: 1.5rem 1rem; /* Slightly reduced horizontal padding */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Align contents to the left */
+  text-align: left;
+}
+
+.stat-box p {
+  margin: 0 0 0.6rem 0;
+  font-size: 0.95rem; /* Slightly smaller label */
+  color: #6b7280;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-box h2 {
+  margin: 0;
+  font-size: 1.9rem; /* Reduced for better fit in 4 columns */
+  color: #111827;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Highlighted style for the total cost */
+.stat-box.total-cost h2 {
+  color: #d9480f; 
+}
+
+/* --- Order Form --- */
+.card-order-form {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card-order-form label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Quantity Picker Controls */
+.order-input-controls {
+  display: flex;
+  height: 60px;
+  max-width: 300px; 
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.order-input-controls button {
+  flex-basis: 60px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #374151;
+  background: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.order-input-controls button:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.order-input-controls button:active {
+  transform: translateY(0);
+}
+
+.order-input-controls input {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  border: 1px solid #cbd5e1;
+  border-top: none;
+  border-bottom: none;
+  width: auto;
+  padding: 0 0.5rem;
+  background-color: #ffffff;
+}
+
+/* Hide the ugly default spinners */
+.order-input-controls input::-webkit-outer-spin-button,
+.order-input-controls input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.order-input-controls input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* --- Submit Button --- */
+.submit-order-btn {
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #22c55e;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  margin-top: 1rem;
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+  width: fit-content;
+  align-self: center;
+}
+
+.submit-order-btn:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(34, 197, 94, 0.4);
+}
+
+.submit-order-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(34, 197, 94, 0.2);
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  /* On tablets, switch to 2 columns */
+  .card-stats-grid {
+    grid-template-columns: repeat(2, 1fr); 
+  }
+
+  .stat-box {
+    padding: 1rem 1.5rem;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .card-container {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* On phones, switch to 1 column */
+  .card-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
