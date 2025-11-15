@@ -1,4 +1,3 @@
-// src/pages/HowToPlay.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { connectSocket, disconnectSocket, sendOrderWS } from "../../services/socket";
@@ -10,10 +9,13 @@ export default function HowToPlay() {
   const myRole = localStorage.getItem("role")?.toUpperCase();
 
   const [waiting, setWaiting] = useState(false);
-  const [gameStatus, setGameStatus] = useState("LOBBY");
   const [gameState, setGameState] = useState(null);
+
+  // ✅ FIX: State for the user's order input
+  const [orderAmount, setOrderAmount] = useState(4); 
   const [orderPlaced, setOrderPlaced] = useState(false);
 
+  // Main connection effect
   useEffect(() => {
     if (!roomId) {
       navigate("/joinlobby");
@@ -22,17 +24,7 @@ export default function HowToPlay() {
 
     const onStateUpdate = (state) => {
       console.log("WS → HowToPlay Update", state);
-
       setGameState(state);
-
-      if (state.gameStatus) {
-        setGameStatus(state.gameStatus);
-
-        // Move to dashboard when week > 1 or game already running after order
-        if (state.gameStatus === "RUNNING" && state.currentWeek > 1) {
-          navigate(`/dashboard/${roomId}`);
-        }
-      }
     };
 
     connectSocket({ roomId, onStateUpdate });
@@ -40,18 +32,40 @@ export default function HowToPlay() {
     return () => disconnectSocket();
   }, [roomId, navigate]);
 
-  const handleStartGame = () => {
-    setWaiting(true);
-    // Backend automatically switches to RUNNING when ready
-  };
-
-  const handlePlaceOrder = () => {
+  // Effect to react to game state changes
+  useEffect(() => {
     if (!gameState) return;
 
-    const me = gameState.players?.find(
-      (p) => p.role === myRole
-    );
-    const qty = me?.currentOrder ?? 4;
+    // ✅ FIX: Check for IN_PROGRESS, not RUNNING
+    if (gameState.gameStatus === "IN_PROGRESS") {
+      
+      // Navigate away if we're past week 1
+      if (gameState.currentWeek > 1) {
+        navigate(`/dashboard/${roomId}`);
+        return;
+      }
+      
+      // Update our order amount with the backend's suggestion
+      if (!orderPlaced) {
+        const me = gameState.players?.find((p) => p.role === myRole);
+        setOrderAmount(me?.currentOrder ?? 4);
+      }
+    }
+  }, [gameState, myRole, orderPlaced, navigate, roomId]);
+
+  // --- Handlers ---
+
+  const handleStartGame = () => {
+    setWaiting(true);
+    // Note: You need a way to tell the backend to start
+    // This button currently does nothing
+  };
+
+  const handlePlaceOrder = (e) => {
+    e.preventDefault(); // This is a form, so prevent reload
+    if (!gameState) return;
+
+    const qty = Number(orderAmount); // Get quantity from our state
 
     sendOrderWS({ roomId, quantity: qty });
     setOrderPlaced(true);
@@ -61,16 +75,14 @@ export default function HowToPlay() {
      UI Logic
      ------------------------------------------------------------ */
 
-  // If game moved forward → dashboard
-  if (gameStatus === "RUNNING" && gameState?.currentWeek > 1) {
-    navigate(`/dashboard/${roomId}`);
-  }
+  const gameStatus = gameState?.gameStatus;
+  const me = gameState?.players?.find((p) => p.role === myRole);
+  const iAmReady = me?.isReadyForNextTurn; // Backend sets this to true after order
 
-  // If RUNNING → show place order flow
-  if (gameStatus === "RUNNING") {
-    const me = gameState?.players?.find(p => p.role === myRole);
-    const iAmReady = me?.isReadyForNextTurn;
-
+  // ✅ FIX: Check for IN_PROGRESS, not RUNNING
+  if (gameStatus === "IN_PROGRESS") {
+    
+    // If order is placed, show waiting screen
     if (iAmReady || orderPlaced) {
       return (
         <div className="waiting-box">
@@ -80,16 +92,29 @@ export default function HowToPlay() {
       );
     }
 
+    // Show the Week 1 Order Form
     return (
       <div className="how-container">
         <h2 className="how-title">Week 1 — Place Your First Order</h2>
-
-        <p>Your current suggested order: {me?.currentOrder ?? 4} units</p>
-
-        <button className="place-order-btn" onClick={handlePlaceOrder}>
-          ✔ Place Order
-        </button>
-
+        
+        {/* ✅ FIX: Added a form and input field */}
+        <form className="place-order-form" onSubmit={handlePlaceOrder}>
+          <div className="input-group">
+            <label>Your Order:</label>
+            <input 
+              type="number"
+              min="0"
+              value={orderAmount}
+              onChange={(e) => setOrderAmount(e.target.value)}
+              className="order-input"
+              autoFocus
+            />
+          </div>
+          <button className="place-order-btn" type="submit">
+            ✔ Place Order
+          </button>
+        </form>
+        
         <ul className="how-list">
           <li><span>🎯</span> Goal: Minimize your total supply chain cost</li>
           <li><span>📦</span> Inventory costs $0.50 per unit per week</li>
@@ -114,7 +139,7 @@ export default function HowToPlay() {
     );
   }
 
-  // Pre-game Lobby Screen
+  // Default: Pre-game Lobby Screen
   return (
     <div className="how-container">
       {/* Host Start Button */}
