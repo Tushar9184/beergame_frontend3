@@ -12,6 +12,7 @@ import CreateRoom from "./pages/CreateRoom"
 import JoinLobby from "./pages/JoinLobby"
 import LobbyWaiting from "./pages/LobbyWaiting"
 import HowToPlay from "./Components/dashboard/Footer.jsx";
+import GameResults from "./pages/GameResults"
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
   { path: "/login", element: <LoginPage /> },
@@ -25,7 +26,8 @@ const router = createBrowserRouter([
   {path:"/createroom", element:<CreateRoom/>},
   {path:"/joinlobby",element:<JoinLobby/>},
   { path:"/lobby/:roomId", element:<LobbyWaiting />},
-  { path: "/howtoplay", element: <HowToPlay /> }
+  { path: "/howtoplay", element: <HowToPlay /> },
+  { path: "/gameresult", element: <GameResults /> }
 
 ]);
 

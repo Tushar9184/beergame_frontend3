@@ -7,13 +7,10 @@ import Card from "../Components/dashboard/Card.jsx";
 import HowToPlay from "../Components/dashboard/Footer.jsx";
 import { connectSocket, disconnectSocket } from "../services/socket";
 
-// We removed the inline 'waitingBoxStyle'
-// It is now in your CSS file as ".waiting-box"
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const roomId = localStorage.getItem("roomId");
-  const role = localStorage.getItem("role"); // Your role, e.g., "RETAILER"
+  const role = localStorage.getItem("role");
 
   const [gameState, setGameState] = useState(() => {
     const cachedState = localStorage.getItem(`gameState_${roomId}`);
@@ -27,7 +24,8 @@ export default function Dashboard() {
     return {
       currentWeek: 1,
       players: [],
-      festiveWeeks: [], // ✅ Default festive weeks
+      festiveWeeks: [],
+      gameStatus: 'LOBBY', // Initialize gameStatus
     };
   });
 
@@ -60,25 +58,36 @@ export default function Dashboard() {
   }, [roomId, navigate]);
 
   // --- Extract data ---
-  // ✅ Get festiveWeeks from state
-  const { currentWeek, players, festiveWeeks } = gameState;
+  // 🚩 FIX: Destructure 'gameStatus' here to make it available for the useEffect below
+  const { currentWeek, players, festiveWeeks, gameStatus } = gameState; 
 
- const me = players.find((p) => p.role?.toUpperCase() === role?.toUpperCase());
-const retailer = players.find((p) => p.role?.toUpperCase() === "RETAILER"); // Keep for reference, but not for demand stat
+  // --- Game End Redirection Logic ---
+  useEffect(() => {
+    if (gameStatus === 'FINISHED') {
+      console.log("Game finished. Redirecting to results page.");
+      // The replace: true option prevents the user from navigating back to the dashboard
+      navigate('/gameresult', { replace: true }); 
+    }
+  }, [gameStatus, navigate]); // Depend on gameStatus and navigate
 
-// FIX 1: Rename/re-assign the variable to correctly represent the current player's demand.
-// The demand the current player (me) must fulfill is stored in their own lastOrderReceived.
-const playerCustomerDemand = me?.lastOrderReceived ?? 0; 
-
-// FIX 2: Check if you are using 'myOrder' for the outgoing shipment display.
-// If your backend sets the outgoing amount to 'myOrderReceived' field, it's confusing.
-// Based on your server code, `me?.lastOrderReceived` is the demand you receive.
-// The data field for 'myOrder' in the React Data component is labeled 'Outgoing Shipment'. 
-// Let's assume you intended to display the order the player places for the next week here:
-const myOutgoingOrder = me?.currentOrder ?? 0; 
-// OR, if it's meant to be the shipment SENT:
-const myOutgoingShipment = me?.outgoingDelivery ?? 0;
+  const me = players.find((p) => p.role?.toUpperCase() === role?.toUpperCase());
+  // The rest of the logic remains for the dashboard display:
+  const playerCustomerDemand = me?.lastOrderReceived ?? 0;
+  const myOutgoingOrder = me?.currentOrder ?? 0;
   const iAmReady = me?.isReadyForNextTurn;
+
+  // Prevent rendering dashboard content if the game is already finished
+  if (gameStatus === 'FINISHED') {
+      return (
+          <div className="dashboard-container">
+              <Header />
+              <div className="waiting-box">
+                  <div className="loader"></div>
+                  <h2>Game Finished. Loading Results...</h2>
+              </div>
+          </div>
+      );
+  }
 
   return (
     <div className="dashboard-container">
@@ -90,11 +99,11 @@ const myOutgoingShipment = me?.outgoingDelivery ?? 0;
           cost={me?.totalCost?.toFixed(2) ?? "0.00"}
           demand={playerCustomerDemand}
           myOrder={myOutgoingOrder}
-          // ✅ Pass festiveWeeks down as a prop
           festiveWeeks={festiveWeeks || []}
         />
       </div>
-
+      
+      {/* ... (rest of the dashboard return block) ... */}
       <div className="fade-in fade-in-delay-2">
         <FlowBox />
       </div>
@@ -104,7 +113,7 @@ const myOutgoingShipment = me?.outgoingDelivery ?? 0;
           <div className="waiting-box">
             <div className="loader"></div>
             <h2>Waiting for other players...</h2>
-            {/* ✅ Live Player Status List */}
+            {/* Live Player Status List */}
             <ul className="player-status-list">
               {(players || []).map((player) => (
                 <li
@@ -122,7 +131,6 @@ const myOutgoingShipment = me?.outgoingDelivery ?? 0;
         )}
       </div>
         <HowToPlay/>
-      {/* <Footer /> */}
     </div>
   );
 }
