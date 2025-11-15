@@ -10,17 +10,25 @@ import { connectSocket, disconnectSocket } from "../services/socket";
 export default function Dashboard() {
   const navigate = useNavigate();
   const roomId = localStorage.getItem("roomId");
-  const role = localStorage.getItem("role");
+  const role = localStorage.getItem("role"); // Your role, e.g., "RETAILER"
 
-  const [gameState, setGameState] = useState({
-    week: 0,
-    demand: 0,
-    totalCost: 0,
-    inventory: {},
-    backlog: {},
-    orderBook: {},
-    costs: {},
-    players: [],
+  // ✅ FIX 1: Initialize state from localStorage
+  // This loads the state saved by the previous pages (Lobby, HowToPlay)
+  const [gameState, setGameState] = useState(() => {
+    const cachedState = localStorage.getItem(`gameState_${roomId}`);
+    if (cachedState) {
+      try {
+        // Parse the state from the cache
+        return JSON.parse(cachedState);
+      } catch (e) {
+        console.error("Failed to parse cached state", e);
+      }
+    }
+    // Default state if nothing is in the cache
+    return {
+      currentWeek: 1,
+      players: [],
+    };
   });
 
   useEffect(() => {
@@ -41,38 +49,45 @@ export default function Dashboard() {
     console.log("Dashboard connecting socket:", roomId);
     connectSocket({
       roomId,
-      onStateUpdate: (state) => {
-        // Normalize incoming state keys to what the frontend expects
-        console.log("Dashboard received state:", state);
-
-        setGameState((prev) => {
-          const normalized = {
-            week: state.currentWeek ?? state.week ?? prev.week,
-            demand: state.demand ?? prev.demand,
-            totalCost:
-              state.totalCost ??
-              state.total_cost ??
-              state.gameTotalCost ??
-              prev.totalCost,
-            players: state.players ?? prev.players,
-            inventory: state.inventory ?? prev.inventory,
-            backlog: state.backlog ?? prev.backlog,
-            orderBook: state.orderBook ?? state.orders ?? prev.orderBook,
-            costs: state.costs ?? prev.costs,
-          };
-          return { ...prev, ...normalized };
-        });
+      onStateUpdate: (newState) => {
+        console.log("Dashboard received state:", newState);
+        
+        // ✅ FIX 2: Update state AND localStorage on every message
+        setGameState(newState);
+        localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
       },
     });
 
     return () => disconnectSocket();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, navigate]);
+
+
+  // --- Extract data for the <Data /> component ---
+  // This logic runs every time gameState changes
+  
+  const { currentWeek, players } = gameState;
+
+  // Find your own player object to get your total cost
+  const me = players.find(p => p.role === role?.toUpperCase());
+  
+  // Find the Retailer. Their "lastOrderReceived" is the "Customer Demand"
+  const retailer = players.find(p => p.role === "RETAILER");
+  
+  // Get the customer demand from the Retailer's data
+  // (This assumes you added 'lastOrderReceived' to your PlayerStateDTO)
+  const customerDemand = retailer?.lastOrderReceived ?? 0; 
 
   return (
     <div>
       <Header />
-      <Data week={gameState.week} cost={gameState.totalCost} demand={gameState.demand} />
+      
+      {/* ✅ FIX 3: Pass down the correct, derived props */}
+      <Data 
+        week={currentWeek} 
+        cost={me?.totalCost?.toFixed(2) ?? "0.00"} // Your total cost
+        demand={customerDemand}                   // The customer demand
+      />
+      
       <FlowBox />
       <Card role={role} roomId={roomId} gameState={gameState} />
       <Footer />
