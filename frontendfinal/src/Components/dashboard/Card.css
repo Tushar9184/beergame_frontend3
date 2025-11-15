@@ -4,7 +4,7 @@
  */
 
 :root {
-  --primary-color: #3b82f6; /* Blue for highlights/buttons */
+  --primary-color: yellow; /* Blue for highlights/buttons */
   --secondary-color: #f3f4f6; /* Light gray for backgrounds */
   --text-dark: #1f2937;
   --text-light: #6b7280;
@@ -164,7 +164,7 @@
 }
 
 .order-input-controls button:hover {
-  background-color: #2563eb;
+  background-color: yellow;
 }
 
 .order-input-controls button:active {
