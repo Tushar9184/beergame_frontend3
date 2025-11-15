@@ -41,18 +41,17 @@ export const registerUser = async (userData) => {
  * Create a game lobby.
  * The backend automatically assigns player as creator.
  */
-export const createLobby = async (role = "RETAILER") => {
+export const createLobby = async (lobbyData) => { // 1. Accept the object
   try {
-    const normalizedRole = String(role).toUpperCase();
+    // 2. Get the 'role' property from the object
+    const normalizedRole = String(lobbyData.role).toUpperCase(); 
 
-    // Backend expects JSON: { role: "RETAILER" }
     const res = await myAxios.post("/api/game/create", {
-      role: normalizedRole,
+      role: normalizedRole, // 3. Send the correct string
     });
 
     const gameId = res?.data?.gameId || res?.data?.id;
 
-    // Save creator details
     localStorage.setItem("roomId", gameId);
     localStorage.setItem("role", normalizedRole);
 
