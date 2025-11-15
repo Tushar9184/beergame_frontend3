@@ -93,16 +93,19 @@ export default function HowToPlay() {
 
   // ✅ FIX 3: Check for IN_PROGRESS
   if (gameStatus === "IN_PROGRESS") {
-    
     // If order is placed, show waiting screen
     if (iAmReady || orderPlaced) {
       return (
         <div className="waiting-box">
           <div className="loader"></div>
-          <h2>Waiting for other players to submit Week 1 order…</h2>
+          {/* ✅ --- THIS IS THE FIX --- ✅ */}
+          <h2>
+            Waiting for other players to submit Week {gameState.currentWeek} order…
+          </h2>
         </div>
       );
     }
+
 
     // Show the Week 1 Order Form
     return (

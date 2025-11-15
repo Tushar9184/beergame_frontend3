@@ -6,6 +6,12 @@ let stompClient = null;
 let activeRoomId = null;
 let currentSubscription = null;
 
+// ✅ FIX 1: Create a variable to hold the CURRENT callback function.
+// This lets us change the callback without reconnecting.
+let currentOnStateUpdate = (state) => {
+  console.warn("WS: onStateUpdate callback is not set.", state);
+};
+
 export function connectSocket({ roomId, onStateUpdate }) {
   if (!roomId) {
     console.error("WS: Missing roomId");
@@ -22,9 +28,13 @@ export function connectSocket({ roomId, onStateUpdate }) {
     process.env.REACT_APP_API_BASE ||
     "https://the-beer-game-backend.onrender.com";
 
-  // Prevent reconnecting to the same room
+  // ✅ FIX 2: Update the callback function *every time* connectSocket is called.
+  currentOnStateUpdate = onStateUpdate;
+
+  // Now, if we're already connected, we just return.
+  // The callback is updated, and that's all we needed.
   if (stompClient && stompClient.connected && activeRoomId === roomId) {
-    console.log("WS already active for:", roomId);
+    console.log("WS already active, callback updated for:", roomId);
     return;
   }
 
@@ -55,7 +65,6 @@ export function connectSocket({ roomId, onStateUpdate }) {
     onConnect: () => {
       console.log("🟢 WS Connected to room:", roomId);
 
-      // Ensure no previous subscription
       if (currentSubscription) {
         try {
           currentSubscription.unsubscribe();
@@ -63,14 +72,17 @@ export function connectSocket({ roomId, onStateUpdate }) {
         currentSubscription = null;
       }
 
-      // Subscribe to updated topic
       currentSubscription = stompClient.subscribe(
         `/topic/game/${roomId}`,
         (msg) => {
           try {
             const body = JSON.parse(msg.body);
             console.log("📥 WS MESSAGE:", body);
-            onStateUpdate(body);
+            
+            // ✅ FIX 3: Use the *variable* callback.
+            // This will always call the *latest* function (from Dashboard).
+            currentOnStateUpdate(body);
+
           } catch (err) {
             console.error("WS parse error:", err);
           }
@@ -108,6 +120,9 @@ export function disconnectSocket() {
 
   stompClient = null;
   activeRoomId = null;
+  currentOnStateUpdate = (state) => { // Reset callback on disconnect
+     console.warn("WS: onStateUpdate callback is not set.", state);
+  };
 }
 
 export function sendOrderWS({ roomId, quantity }) {
