@@ -28,6 +28,14 @@ const clearCharts = () => {
 /**
  * ⚠️ IMPORTANT: Placeholder for Backend API Call
  * This simulates fetching the FULL historical data object for the room.
+ * * **CHANGES MADE HERE:** The output keys now match the backend's GameTurn entity:
+ * - `weekDay` instead of `weeks`
+ * - `demandRecieved` instead of `customerOrders`
+ * - `inventoryAtEndOfWeek` instead of `inventory`
+ * - `backOrderAtEndOfWeek` instead of `backorder`
+ * - `shipmentRecieved` instead of `shipmentReceived`
+ * - `weeklyCost` instead of `costs`
+ * - `totalCost` instead of `cumulativeCost`
  */
 async function fetchGameHistory(roomId) {
     console.log(`Simulating API call to fetch full history for Room: ${roomId}`);
@@ -41,7 +49,6 @@ async function fetchGameHistory(roomId) {
     let lastPlacedOrders = baseOrders;
 
     PLAYER_ROLES.forEach((role, i) => {
-        const factor = i + 1; 
         const received = role === "Retailer" ? [...baseOrders] : [4, ...lastPlacedOrders.slice(0, 24)]; 
         
         const placed = received.map(v => Math.max(0, Math.round(v * (1 + i * 0.1) + (Math.random() * 5))));
@@ -66,21 +73,22 @@ async function fetchGameHistory(roomId) {
         });
 
         simulation[role] = {
-            weeks,
+            // ✅ UPDATED KEYS to match backend GameTurn entity field names (camelCase/snake_case)
+            weekDay: weeks, // Used 'weekDay'
             playerRole: role,
-            customerOrders: received, 
-            newOrderPlaced: placed,
-            inventory: inventory,
-            backorder: backorder,
-            shipmentSent: placed.map(o => o),
-            shipmentReceived: placed.map(o => o),
-            costs: costs, 
-            cumulativeCost: costs.map((_, i, arr) => arr.slice(0, i + 1).reduce((a, b) => a + b, 0)),
-            totalCost: cumulativeCost
+            demandRecieved: received, // Used 'demandRecieved'
+            orderPlaced: placed,
+            inventoryAtEndOfWeek: inventory, // Used 'inventoryAtEndOfWeek'
+            backOrderAtEndOfWeek: backorder, // Used 'backOrderAtEndOfWeek'
+            shipmentSent: placed.map(o => o), 
+            shipmentRecieved: placed.map(o => o), // Used 'shipmentRecieved'
+            weeklyCost: costs, // Used 'weeklyCost'
+            totalCost: costs.map((_, i, arr) => arr.slice(0, i + 1).reduce((a, b) => a + b, 0)), // Used 'totalCost'
+            totalCumulativeCost: cumulativeCost // Added a different name for the final single cost
         };
     });
     
-    simulation["Consumer"] = { weeks, newOrderPlaced: simulation["Retailer"].customerOrders };
+    simulation["Consumer"] = { weekDay: weeks, orderPlaced: simulation["Retailer"].demandRecieved };
 
     return simulation;
 }
@@ -126,18 +134,20 @@ function buildChart(canvas, labels, datasets, title) {
 -------------------------- */
 
 function PlayerHistoryTable({ data }) {
-    if (!data || !data.weeks) return <p style={{textAlign: 'center'}}>No detailed history data available for this player.</p>;
+    // FIX 3: Change 'data.weeks' check to 'data.weekDay'
+    if (!data || !data.weekDay) return <p style={{textAlign: 'center'}}>No detailed history data available for this player.</p>;
 
-    const tableRows = data.weeks.map((week, index) => ({
+    // FIX 4: Update all data access keys to match the backend/new mock data structure
+    const tableRows = data.weekDay.map((week, index) => ({
         week,
-        ordersReceived: data.customerOrders[index],
-        ordersPlaced: data.newOrderPlaced[index],
+        ordersReceived: data.demandRecieved[index], // Changed from customerOrders
+        ordersPlaced: data.orderPlaced[index],      // Changed from newOrderPlaced
         shipmentSent: data.shipmentSent[index], 
-        shipmentReceived: data.shipmentReceived[index],
-        inventory: data.inventory[index],
-        backorder: data.backorder[index],
-        weeklyCost: data.costs[index].toFixed(2),
-        cumulativeCost: data.cumulativeCost[index].toFixed(2)
+        shipmentReceived: data.shipmentRecieved[index], // Changed from shipmentReceived
+        inventory: data.inventoryAtEndOfWeek[index], // Changed from inventory
+        backorder: data.backOrderAtEndOfWeek[index], // Changed from backorder
+        weeklyCost: data.weeklyCost[index].toFixed(2), // Changed from costs
+        cumulativeCost: data.totalCost[index].toFixed(2) // Changed from cumulativeCost
     })).reverse(); 
 
     return (
@@ -209,6 +219,7 @@ export default function GameResults() {
         
         fetchGameHistory(roomId)
             .then(data => {
+                // This data object keys (e.g., 'Retailer') must match the keys used below
                 setFullGameResults(data); 
             })
             .catch(error => {
@@ -230,25 +241,25 @@ export default function GameResults() {
         const p = data[role];
         if (!p) return;
 
-        const weeks = p.weeks;
+        const weeks = p.weekDay; // Changed from p.weeks
         contentRef.current.innerHTML = "";
 
         const charts = [
             ["Orders vs Week", [
-                { label: "Orders Received", data: p.customerOrders, borderColor: COLORS.Wholesaler, backgroundColor: 'rgba(37, 99, 235, 0.1)' },
-                { label: "Orders Placed", data: p.newOrderPlaced, borderColor: COLORS.Retailer, backgroundColor: 'rgba(5, 150, 105, 0.1)' }
+                { label: "Orders Received", data: p.demandRecieved, borderColor: COLORS.Wholesaler, backgroundColor: 'rgba(37, 99, 235, 0.1)' }, // Changed from p.customerOrders
+                { label: "Orders Placed", data: p.orderPlaced, borderColor: COLORS.Retailer, backgroundColor: 'rgba(5, 150, 105, 0.1)' } // Changed from p.newOrderPlaced
             ]],
             ["Inventory vs Week", [
-                { label: "Inventory", data: p.inventory, borderColor: COLORS.Retailer, backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true }
+                { label: "Inventory", data: p.inventoryAtEndOfWeek, borderColor: COLORS.Retailer, backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true } // Changed from p.inventory
             ]],
             ["Backorder vs Week", [
-                { label: "Backorder", data: p.backorder, borderColor: COLORS.Distributor, backgroundColor: 'rgba(220, 38, 38, 0.1)', fill: true }
+                { label: "Backorder", data: p.backOrderAtEndOfWeek, borderColor: COLORS.Distributor, backgroundColor: 'rgba(220, 38, 38, 0.1)', fill: true } // Changed from p.backorder
             ]],
             ["Weekly Cost", [
-                { label: "Cost", data: p.costs, borderColor: COLORS.Consumer, backgroundColor: 'rgba(165, 126, 0, 0.1)' }
+                { label: "Cost", data: p.weeklyCost, borderColor: COLORS.Consumer, backgroundColor: 'rgba(165, 126, 0, 0.1)' } // Changed from p.costs
             ]],
             ["Cumulative Cost", [
-                { label: "Cumulative", data: p.cumulativeCost, borderColor: COLORS.Manufacturer, backgroundColor: 'rgba(107, 114, 128, 0.1)' }
+                { label: "Cumulative", data: p.totalCost, borderColor: COLORS.Manufacturer, backgroundColor: 'rgba(107, 114, 128, 0.1)' } // Changed from p.cumulativeCost
             ]]
         ];
 
@@ -268,17 +279,18 @@ export default function GameResults() {
         contentRef.current.innerHTML = "";
 
         const titles = {
-            newOrderPlaced: "Orders (Bullwhip Effect)",
-            cumulativeCost: "Cumulative Cost Comparison"
+            orderPlaced: "Orders (Bullwhip Effect)", // Changed from newOrderPlaced
+            totalCost: "Cumulative Cost Comparison" // Changed from cumulativeCost
         };
         
         const canvas = makeCard(titles[key], contentRef);
-        const weeks = data["Retailer"].weeks;
-        const roles = key === "newOrderPlaced" ? ["Consumer", ...PLAYER_ROLES] : PLAYER_ROLES;
+        const weeks = data["Retailer"].weekDay; // Changed from weeks
+        const roles = key === "orderPlaced" ? ["Consumer", ...PLAYER_ROLES] : PLAYER_ROLES; // Changed from newOrderPlaced
 
         const datasets = roles.map(r => ({
             label: r, 
-            data: data[r]?.newOrderPlaced || data[r]?.cumulativeCost, 
+            // Access the correct array based on key
+            data: data[r]?.orderPlaced || data[r]?.totalCost, 
             borderColor: COLORS[r],
             tension: 0.3,
             pointRadius: 3,
@@ -288,7 +300,7 @@ export default function GameResults() {
         buildChart(canvas, weeks, datasets, titles[key]);
     }
 
-
+    // FIX 5: Update the activeChartKey logic to use the new names
     useEffect(() => {
         if (!fullGameResults) return;
 
@@ -332,14 +344,16 @@ export default function GameResults() {
     const renderSummary = () => (
         <div className="summary-section fade-in">
             <h3>🎉 Game Completed (Week {TOTAL_WEEKS}) 🎉</h3>
-            <h2>Your Total Cost: <span style={{color: COLORS.Distributor, fontWeight: 'bold'}}>${myData.totalCost.toFixed(2)}</span></h2>
+            {/* FIX 6: Use myData.totalCumulativeCost for the final single cost */}
+            <h2>Your Total Cost: <span style={{color: COLORS.Distributor, fontWeight: 'bold'}}>${myData.totalCumulativeCost.toFixed(2)}</span></h2> 
 
             <div className="cost-comparison-grid">
                 {PLAYER_ROLES.map(role => (
                     <div key={role} className="cost-box">
                         <h4>{role} Total Cost:</h4>
                         <p style={{ color: COLORS[role], fontWeight: 'bold' }}>
-                            ${fullGameResults[role]?.totalCost.toFixed(2) ?? 'N/A'}
+                            {/* FIX 7: Use totalCumulativeCost for comparison */}
+                            ${fullGameResults[role]?.totalCumulativeCost.toFixed(2) ?? 'N/A'}
                         </p>
                     </div>
                 ))}
@@ -366,9 +380,10 @@ export default function GameResults() {
                 ))}
                 
                 <h4>Comparison Views:</h4>
+                {/* FIX 8: Update keys in comparison map */}
                 {Object.entries({
-                    newOrderPlaced: "Orders (Bullwhip)",
-                    cumulativeCost: "Cumulative Cost"
+                    orderPlaced: "Orders (Bullwhip)", // Changed from newOrderPlaced
+                    totalCost: "Cumulative Cost" // Changed from cumulativeCost
                 }).map(([key, label]) => (
                     <button 
                         key={key} 
@@ -383,7 +398,7 @@ export default function GameResults() {
             <h2 style={{marginTop: '20px', textAlign: 'center'}}>{
                 PLAYER_ROLES.includes(activeChartKey) 
                     ? `${activeChartKey} Report` 
-                    : (activeChartKey === 'newOrderPlaced' ? 'Orders (Bullwhip Effect)' : 'Cumulative Cost Comparison')
+                    : (activeChartKey === 'orderPlaced' ? 'Orders (Bullwhip Effect)' : 'Cumulative Cost Comparison') // Changed from newOrderPlaced
             }</h2>
             <div ref={graphContainerRef} className="chart-grid-container">
                 {/* Charts are rendered here by useEffect */}
