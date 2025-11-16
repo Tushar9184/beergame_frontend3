@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { sendOrderWS } from "../../services/socket";
-import "./Card.css"; // Ensure this import is present
+import "./Card.css";
 
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
@@ -38,6 +38,12 @@ export default function Card({ role, roomId, gameState = {} }) {
     sendOrderWS({ roomId, quantity: orderQty });
   };
 
+  // Format cost for display
+  const formattedCost = (me.totalCost ?? 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
     <div className="card-container">
       <div className="card-item">
@@ -47,29 +53,29 @@ export default function Card({ role, roomId, gameState = {} }) {
           <p>{me.userName ?? "Player"}</p>
         </div>
 
-       
-<div className="card-stats-grid">
-    {/* 1. INVENTORY */}
-    <div className="stat-box">
-        <p>📦 Inventory</p>
-        <h2>{me.inventory ?? 0} units</h2>
-    </div>
-    {/* 2. BACKLOG */}
-    <div className="stat-box">
-        <p>⚠️ Backlog</p>
-        <h2>{me.backlog ?? 0} units</h2>
-    </div>
-    {/* 3. INCOMING SHIPMENT */}
-    <div className="stat-box">
-        <p>🚚 Incoming</p>
-        <h2>{me.incomingShipment ?? 0} units</h2>
-    </div>
-    {/* 4. TOTAL COST */}
-    <div className="stat-box total-cost">
-        <p>💰 Total Cost</p>
-        <h2>${(me.totalCost ?? 0).toFixed(2)}</h2>
-    </div>
-</div>
+        
+        <div className="card-stats-grid">
+          {/* 1. INVENTORY */}
+          <div className="stat-box">
+              <p>📦 Inventory</p>
+              <h2>{me.inventory ?? 0} units</h2>
+          </div>
+          {/* 2. BACKLOG */}
+          <div className="stat-box">
+              <p>⚠️ Backlog</p>
+              <h2>{me.backlog ?? 0} units</h2>
+          </div>
+          {/* 3. INCOMING SHIPMENT */}
+          <div className="stat-box">
+              <p>🚚 Incoming</p>
+              <h2>{me.incomingShipment ?? 0} units</h2>
+          </div>
+          {/* 4. TOTAL COST */}
+          <div className="stat-box total-cost">
+              <p>💰 Total Cost</p>
+              <h2>${formattedCost}</h2> {/* Use formatted cost */}
+          </div>
+        </div>
 
         {/* --- NEW ORDER FORM --- */}
         <form className="card-order-form" onSubmit={handlePlaceOrder}>
@@ -90,7 +96,7 @@ export default function Card({ role, roomId, gameState = {} }) {
             </button>
           </div>
 
-          <button type="submit" className="submit-order-btn">
+          <button type="submit" className="submit-order-btn" disabled={me?.isReadyForNextTurn}>
             ✔ Submit Order for Week {gameState.currentWeek}
           </button>
         </form>

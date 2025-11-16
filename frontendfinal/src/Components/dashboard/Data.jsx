@@ -50,15 +50,16 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
     display: 'inline-block',
     height: '10px',
     width: '10px',
-    backgroundColor: 'red',
+    backgroundColor: '#EF4444', // Consistent festive red
     borderRadius: '50%',
     marginRight: '6px',
     verticalAlign: 'middle',
   };
+  
   return (
     <>
     
-      {/* 1. The 4 Stats Boxes (no changes) */}
+      {/* 1. The 4 Stats Boxes */}
       <div className="data-container">
         {/* Current Week */}
         <div className="data-box">
@@ -82,13 +83,13 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
           </div>
         </div>
 
-        {/* Your Incoming Order */}
+        {/* Your Outgoing Order */}
         <div className="data-box">
           <div className="icon-wrapper order">
-            <span>📥</span>
+            <span>📤</span>
           </div>
           <div className="data-text">
-            <p>Outgoing Shipment</p>
+            <p>Your Order (Next Week)</p>
             <h2>{myOrder} units</h2>
           </div>
         </div>
@@ -96,10 +97,10 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
         {/* Customer Demand */}
         <div className="data-box">
           <div className="icon-wrapper demand">
-            <span>📈</span>
+            <span>⬇️</span>
           </div>
           <div className="data-text">
-            <p>Customer Demand</p>
+            <p>Incoming Order (Demand)</p>
             <h2>{demand} units</h2>
           </div>
         </div>
@@ -110,7 +111,7 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
       <div className="festive-note" style={{ textAlign: 'left', marginTop: '10px' }}>
         <p style={{ margin: 0, fontSize: '0.9em' }}>
           **Note:** <span style={redDotStyle}></span>
-          The red circle week denotes the festive season.
+          The red circle week denotes the **festive season** (increased demand).
         </p>
       </div>
     </>

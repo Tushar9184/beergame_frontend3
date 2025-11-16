@@ -58,7 +58,6 @@ export default function Dashboard() {
   }, [roomId, navigate]);
 
   // --- Extract data ---
-  // 🚩 FIX: Destructure 'gameStatus' here to make it available for the useEffect below
   const { currentWeek, players, festiveWeeks, gameStatus } = gameState; 
 
   // --- Game End Redirection Logic ---
@@ -68,13 +67,19 @@ export default function Dashboard() {
       // The replace: true option prevents the user from navigating back to the dashboard
       navigate('/gameresult', { replace: true }); 
     }
-  }, [gameStatus, navigate]); // Depend on gameStatus and navigate
+  }, [gameStatus, navigate]);
 
   const me = players.find((p) => p.role?.toUpperCase() === role?.toUpperCase());
   // The rest of the logic remains for the dashboard display:
   const playerCustomerDemand = me?.lastOrderReceived ?? 0;
   const myOutgoingOrder = me?.currentOrder ?? 0;
   const iAmReady = me?.isReadyForNextTurn;
+
+  // Use a formatter for cost display
+  const formattedCost = (me?.totalCost ?? 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   // Prevent rendering dashboard content if the game is already finished
   if (gameStatus === 'FINISHED') {
@@ -96,14 +101,13 @@ export default function Dashboard() {
       <div className="fade-in fade-in-delay-1">
         <Data
           week={currentWeek}
-          cost={me?.totalCost?.toFixed(2) ?? "0.00"}
+          cost={formattedCost} /* Use formatted cost here */
           demand={playerCustomerDemand}
           myOrder={myOutgoingOrder}
           festiveWeeks={festiveWeeks || []}
         />
       </div>
       
-      {/* ... (rest of the dashboard return block) ... */}
       <div className="fade-in fade-in-delay-2">
         <FlowBox />
       </div>
