@@ -1,291 +1,409 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Chart from 'chart.js/auto'; // Assuming Chart.js is installed
-import { PlayerHistoryTable } from './PlayerHistoryTable'; 
+import React, { useState, useEffect, useRef } from 'react';
+import Chart from 'chart.js/auto';
 
 /* --------------------------
-    Configuration (Match 25-week game)
+    Configuration 
 -------------------------- */
 const TOTAL_WEEKS = 25; 
-// Using Manufacturer (assuming Producer is Manufacturer in the game logic)
 const PLAYER_ROLES = ["Retailer", "Wholesaler", "Distributor", "Manufacturer"]; 
-const FESTIVE_WEEKS_CONFIG = [7, 18];
+// Role colors for charts and comparison
 const COLORS = {
-  Consumer: "#F0C000",
-  Retailer: "#00B050",
-  Wholesaler: "#00B0F0",
-  Distributor: "#FF0000",
-  Manufacturer: "#E0E0E0" // Using this color for Manufacturer
+    Consumer: "#A57E00", 
+    Retailer: "#059669", 
+    Wholesaler: "#2563EB", 
+    Distributor: "#DC2626", 
+    Manufacturer: "#6B7280" 
 };
 
 /* --------------------------
-    Utility
+    Utility & Data Fetching (Simulated)
 -------------------------- */
-const range = (s, e) => Array.from({ length: e - s + 1 }, (_, i) => s + i);
 
-/* --------------------------
-    Generate Mock Data (Based on your provided logic for 25 weeks)
-    NOTE: We are relying on these mocked arrays to represent the history. 
-    In the real app, this history data must be fetched from the backend.
--------------------------- */
-function generateMockData() {
-  const weeks = range(1, 25);
-  const data = {};
-
-  let base = Array(25).fill(20);
-  for (let i = 4; i <= 11; i++) base[i] = 40;
-  FESTIVE_WEEKS_CONFIG.forEach(w => base[w - 1] = base[w - 2] * 2);
-
-  let last = null;
-
-  PLAYER_ROLES.forEach((role, i) => {
-    let received;
-    if (role === "Retailer") received = [...base];
-    else received = last ? [20, ...last.slice(0, 24)] : Array(25).fill(20); 
-
-    const panic = 1 + i * 0.25;
-    let placed = received.map(v => Math.max(0, Math.round(v * panic + (Math.random() * 10 - 5))));
-    last = [...placed]; 
-
-    let inventory = received.map((v, idx) => Math.max(0, Math.round(100 - v * 0.5 + (Math.random() * 30 - 15) - i * 15)));
-    let back = received.map((v, idx) => {
-      let b = Math.max(0, v - inventory[idx] * 0.8 + (Math.random() * 10));
-      return Math.round(b);
-    });
-
-    let cost = inventory.map((inv, idx) => inv * 0.75 + back[idx] * 1.5);
-    let cumulative = cost.reduce((a, v) => { a.push((a.at(-1) || 0) + v); return a; }, []);
-
-    data[role] = {
-      weeks,
-      playerRole: role, 
-      customerOrders: received, // Orders Received (from downstream player)
-      newOrderPlaced: placed,    // Orders Placed (to upstream supplier)
-      inventory,
-      backorder: back,
-      // Mocked Shipments since DTO doesn't expose them directly
-      shipmentSent: placed.map(() => Math.round(Math.random() * 50)),
-      shipmentReceived: placed.map(() => Math.round(Math.random() * 50)),
-      costs: cost,
-      cumulativeCost: cumulative,
-      totalCost: cumulative.at(-1) 
-    };
-  });
-
-  data["Consumer"] = { weeks, newOrderPlaced: [...base] };
-  return data;
-}
-
-const MOCK_DATA = generateMockData();
-
-/* --------------------------
-    Chart Logic (Adapted to React Hooks/Refs)
--------------------------- */
 const ACTIVE_CHARTS = [];
 const clearCharts = () => {
-  ACTIVE_CHARTS.forEach(ch => ch.destroy());
-  ACTIVE_CHARTS.length = 0; 
+    ACTIVE_CHARTS.forEach(ch => ch.destroy());
+    ACTIVE_CHARTS.length = 0; 
 };
 
+/**
+ * ⚠️ IMPORTANT: Placeholder for Backend API Call
+ * This simulates fetching the FULL historical data object for the room.
+ */
+async function fetchGameHistory(roomId) {
+    console.log(`Simulating API call to fetch full history for Room: ${roomId}`);
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    // --- Dynamic Mock Data Generation (SIMULATING BACKEND RESPONSE) ---
+    const weeks = Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1);
+    const simulation = {};
+    
+    let baseOrders = weeks.map((w, i) => i < 4 ? 4 : i < 10 ? 8 : 12); 
+    let lastPlacedOrders = baseOrders;
+
+    PLAYER_ROLES.forEach((role, i) => {
+        const factor = i + 1; 
+        const received = role === "Retailer" ? [...baseOrders] : [4, ...lastPlacedOrders.slice(0, 24)]; 
+        
+        const placed = received.map(v => Math.max(0, Math.round(v * (1 + i * 0.1) + (Math.random() * 5))));
+        lastPlacedOrders = placed; 
+
+        let cumulativeCost = 0;
+        let costs = [];
+        let inventory = [];
+        let backorder = [];
+
+        received.forEach((orderRec, index) => {
+            const currentInventory = (index === 0 ? 50 : inventory[index - 1] || 50) + (placed[index] || 0) - orderRec;
+            const inv = Math.max(0, currentInventory);
+            const back = Math.max(0, -currentInventory);
+            
+            const weeklyCost = (inv * 0.5) + (back * 1.0) + (index * 0.1);
+            cumulativeCost += weeklyCost;
+            
+            costs.push(weeklyCost);
+            inventory.push(inv);
+            backorder.push(back);
+        });
+
+        simulation[role] = {
+            weeks,
+            playerRole: role,
+            customerOrders: received, 
+            newOrderPlaced: placed,
+            inventory: inventory,
+            backorder: backorder,
+            shipmentSent: placed.map(o => o),
+            shipmentReceived: placed.map(o => o),
+            costs: costs, 
+            cumulativeCost: costs.map((_, i, arr) => arr.slice(0, i + 1).reduce((a, b) => a + b, 0)),
+            totalCost: cumulativeCost
+        };
+    });
+    
+    simulation["Consumer"] = { weeks, newOrderPlaced: simulation["Retailer"].customerOrders };
+
+    return simulation;
+}
+
 function makeCard(title, containerRef) {
-  const card = document.createElement("div");
-  card.className = "card result-chart-card";
+    const card = document.createElement("div");
+    card.className = "card result-chart-card";
 
-  const label = document.createElement("h3");
-  label.textContent = title;
-  card.appendChild(label);
+    const label = document.createElement("h3");
+    label.textContent = title;
+    card.appendChild(label);
 
-  const canvas = document.createElement("canvas");
-  card.appendChild(canvas);
-  containerRef.current.appendChild(card);
-  return canvas;
+    const canvas = document.createElement("canvas");
+    card.appendChild(canvas);
+    containerRef.current.appendChild(card);
+    return canvas;
 }
 
 function buildChart(canvas, labels, datasets, title) {
-  const chart = new Chart(canvas.getContext("2d"), {
-    type: "line",
-    data: { labels, datasets },
-    options: {
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: "#333" } }, 
-        title: { display: true, text: title, color: "#333" }
-      },
-      scales: {
-        x: { ticks: { color: "#666" } },
-        y: { ticks: { color: "#666" }}
-      }
-    }
-  });
-  ACTIVE_CHARTS.push(chart);
+    const chart = new Chart(canvas.getContext("2d"), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+            animation: true,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: "#333" } }, 
+                title: { display: true, text: title, color: "#333" }
+            },
+            scales: {
+                x: { ticks: { color: "#666" } },
+                y: { ticks: { color: "#666" }}
+            }
+        }
+    });
+    ACTIVE_CHARTS.push(chart);
 }
 
-function showPlayerCharts(role, contentRef) {
-  clearCharts();
-  const p = MOCK_DATA[role];
-  const weeks = p.weeks;
-  contentRef.current.innerHTML = "";
 
-  const charts = [
-    ["Orders vs Week", [
-      { label: "Orders Received", data: p.customerOrders, borderColor: COLORS.Wholesaler },
-      { label: "Orders Placed", data: p.newOrderPlaced, borderColor: COLORS.Retailer }
-    ]],
-    ["Inventory vs Week", [
-      { label: "Inventory", data: p.inventory, borderColor: COLORS.Retailer }
-    ]],
-    ["Backorder vs Week", [
-      { label: "Backorder", data: p.backorder, borderColor: COLORS.Distributor }
-    ]],
-    ["Weekly Cost", [
-      { label: "Cost", data: p.costs, borderColor: COLORS.Consumer }
-    ]],
-    ["Cumulative Cost", [
-      { label: "Cumulative", data: p.cumulativeCost, borderColor: COLORS.Manufacturer }
-    ]]
-  ];
+/* --------------------------
+    Table Component (Nested)
+-------------------------- */
 
-  charts.forEach(([title, ds]) => {
-    const canvas = makeCard(title, contentRef);
-    buildChart(canvas, weeks, ds.map(d => ({
-      ...d,
-      tension: 0,
-      pointRadius: 2
-    })), title);
-  });
-}
+function PlayerHistoryTable({ data }) {
+    if (!data || !data.weeks) return <p style={{textAlign: 'center'}}>No detailed history data available for this player.</p>;
 
-function showCompareCharts(key, contentRef) {
-  clearCharts();
-  contentRef.current.innerHTML = "";
+    const tableRows = data.weeks.map((week, index) => ({
+        week,
+        ordersReceived: data.customerOrders[index],
+        ordersPlaced: data.newOrderPlaced[index],
+        shipmentSent: data.shipmentSent[index], 
+        shipmentReceived: data.shipmentReceived[index],
+        inventory: data.inventory[index],
+        backorder: data.backorder[index],
+        weeklyCost: data.costs[index].toFixed(2),
+        cumulativeCost: data.cumulativeCost[index].toFixed(2)
+    })).reverse(); 
 
-  const titles = {
-    newOrderPlaced: "Orders (Bullwhip Effect)",
-    inventory: "Inventory Comparison",
-    backorder: "Backorder Comparison",
-    costs: "Weekly Cost Comparison",
-    cumulativeCost: "Cumulative Cost Comparison"
-  };
-
-  const canvas = makeCard(titles[key], contentRef);
-  const weeks = MOCK_DATA["Retailer"].weeks;
-  const roles = key === "newOrderPlaced" ? ["Consumer", ...PLAYER_ROLES] : PLAYER_ROLES;
-
-  const datasets = roles.map(r => ({
-    // Label Producer as per original graph code's labels, but use Manufacturer's data
-    label: r === "Manufacturer" ? "Producer" : r, 
-    data: MOCK_DATA[r][key],
-    borderColor: COLORS[r],
-    tension: 0,
-    pointRadius: 2
-  }));
-
-  buildChart(canvas, weeks, datasets, titles[key]);
+    return (
+        <div className="history-table-wrapper">
+            <table className="history-table">
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Orders Rec.</th>
+                        <th>Orders Placed</th>
+                        <th>Shipment Rec.</th>
+                        <th>Shipment Sent</th>
+                        <th>Inv. End</th>
+                        <th>Backorder End</th>
+                        <th>Weekly Cost</th>
+                        <th>Cum. Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {tableRows.map((row) => (
+                        <tr key={row.week}>
+                            <td>{row.week}</td>
+                            <td>{row.ordersReceived}</td>
+                            <td>{row.ordersPlaced}</td>
+                            <td>{row.shipmentReceived}</td>
+                            <td>{row.shipmentSent}</td>
+                            <td className={row.inventory < 10 && row.inventory >= 0 ? 'low-alert' : ''}>
+                                {row.inventory}
+                            </td>
+                            <td className={row.backorder > 0 ? 'backlog-alert' : ''}>
+                                {row.backorder}
+                            </td>
+                            <td>${row.weeklyCost}</td>
+                            <td style={{fontWeight: 'bold'}}>${row.cumulativeCost}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 
 // --- Main React Component ---
 
-export default function GameResults({ /* actualGameData, myRole */ }) {
-  // --- MOCK SETUP (Replace with actual data fetch) ---
-  const myRole = "Wholesaler"; 
-  const myData = MOCK_DATA[myRole];
-  // --- END MOCK SETUP ---
-  
-  const [activeTab, setActiveTab] = useState('summary');
-  const [activeChartKey, setActiveChartKey] = useState(myRole);
-  const graphContainerRef = useRef(null);
+export default function GameResults() {
+    
+    // FIX 1: Retrieve Role and Room ID dynamically from localStorage
+    const storedRole = localStorage.getItem("role");
+    const myRole = storedRole ? storedRole.charAt(0).toUpperCase() + storedRole.slice(1).toLowerCase() : "Retailer";
+    const roomId = localStorage.getItem("roomId");
+    
+    // --- State and Data Retrieval ---
+    const [fullGameResults, setFullGameResults] = useState(null);
+    const [loading, setLoading] = useState(true);
+    
+    const [activeTab, setActiveTab] = useState('summary');
+    const [activeChartKey, setActiveChartKey] = useState(myRole);
+    const graphContainerRef = useRef(null);
 
-  // Effect to handle chart rendering 
-  useEffect(() => {
-    if (activeTab === 'graphs' && graphContainerRef.current) {
-      if (PLAYER_ROLES.includes(activeChartKey)) {
-        showPlayerCharts(activeChartKey, graphContainerRef);
-      } else {
-        showCompareCharts(activeChartKey, graphContainerRef);
-      }
-    }
-    return () => clearCharts();
-  }, [activeTab, activeChartKey]); 
-
-  // --- Rendering Functions ---
-
-  const renderSummary = () => (
-    <div className="summary-section">
-      <h3>🎉 Game Completed (Week {TOTAL_WEEKS}) 🎉</h3>
-      <h2>Your Total Cost: <span style={{color: COLORS[myRole], fontWeight: 'bold'}}>${myData.totalCost.toFixed(2)}</span></h2>
-
-      <div className="cost-comparison-grid">
-        {PLAYER_ROLES.map(role => (
-          <div key={role} className="cost-box">
-            <h4>{role} Total Cost:</h4>
-            <p style={{ color: COLORS[role], fontWeight: 'bold' }}>${MOCK_DATA[role].totalCost.toFixed(2)}</p>
-          </div>
-        ))}
-      </div>
-
-      <h3 style={{marginTop: '40px'}}>Order History (Your Role: {myRole})</h3>
-      <PlayerHistoryTable data={myData} />
-    </div>
-  );
-
-  const renderGraphs = () => (
-    <div className="graphs-section">
-      <div className="chart-menu">
-        <h4>Individual Player Reports:</h4>
-        {PLAYER_ROLES.map(role => (
-          <button 
-            key={role} 
-            onClick={() => setActiveChartKey(role)} 
-            className={activeChartKey === role ? 'active-chart-btn' : ''}
-            style={{borderColor: COLORS[role], color: COLORS[role]}}
-          >
-            {role}
-          </button>
-        ))}
+    // Fetch the game history when the component mounts
+    useEffect(() => {
+        if (!roomId) {
+            setLoading(false);
+            return;
+        }
         
-        <h4>Comparison Views:</h4>
-        {Object.entries({
-          newOrderPlaced: "Orders (Bullwhip)",
-          cumulativeCost: "Cumulative Cost"
-        }).map(([key, label]) => (
-          <button 
-            key={key} 
-            onClick={() => setActiveChartKey(key)} 
-            className={activeChartKey === key ? 'active-chart-btn' : ''}
-            style={{borderColor: COLORS.Consumer, color: COLORS.Consumer}}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <h2 style={{marginTop: '20px', textAlign: 'center'}}>{
-        PLAYER_ROLES.includes(activeChartKey) 
-          ? `${activeChartKey} Report` 
-          : (activeChartKey === 'newOrderPlaced' ? 'Orders (Bullwhip Effect)' : 'Cumulative Cost Comparison')
-      }</h2>
-      <div ref={graphContainerRef} className="chart-grid-container">
-        {/* Charts are rendered here */}
-      </div>
-    </div>
-  );
+        setLoading(true);
+        
+        fetchGameHistory(roomId)
+            .then(data => {
+                setFullGameResults(data); 
+            })
+            .catch(error => {
+                console.error("Error fetching game results:", error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+            
+    }, [roomId]);
+    
+    // FIX 2: Correctly filter the full results based on the dynamic myRole
+    const myData = fullGameResults ? fullGameResults[myRole] : null;
 
-  return (
-    <div className="results-container">
-      <h1 className="results-header">Beer Game Results & Analysis</h1>
-      
-      <div className="results-tabs">
-        <button className={activeTab === 'summary' ? 'active-tab' : ''} onClick={() => setActiveTab('summary')}>Summary & History</button>
-        <button className={activeTab === 'graphs' ? 'active-tab' : ''} onClick={() => setActiveTab('graphs')}>Graphical Analysis</button>
-      </div>
+    // --- Chart Rendering Logic (Uses fullGameResults) ---
+    
+    const showPlayerCharts = (role, contentRef, data) => {
+        clearCharts();
+        const p = data[role];
+        if (!p) return;
 
-      <hr />
+        const weeks = p.weeks;
+        contentRef.current.innerHTML = "";
 
-      <div className="results-content">
-        {activeTab === 'summary' && renderSummary()}
-        {activeTab === 'graphs' && renderGraphs()}
-      </div>
-    </div>
-  );
+        const charts = [
+            ["Orders vs Week", [
+                { label: "Orders Received", data: p.customerOrders, borderColor: COLORS.Wholesaler, backgroundColor: 'rgba(37, 99, 235, 0.1)' },
+                { label: "Orders Placed", data: p.newOrderPlaced, borderColor: COLORS.Retailer, backgroundColor: 'rgba(5, 150, 105, 0.1)' }
+            ]],
+            ["Inventory vs Week", [
+                { label: "Inventory", data: p.inventory, borderColor: COLORS.Retailer, backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true }
+            ]],
+            ["Backorder vs Week", [
+                { label: "Backorder", data: p.backorder, borderColor: COLORS.Distributor, backgroundColor: 'rgba(220, 38, 38, 0.1)', fill: true }
+            ]],
+            ["Weekly Cost", [
+                { label: "Cost", data: p.costs, borderColor: COLORS.Consumer, backgroundColor: 'rgba(165, 126, 0, 0.1)' }
+            ]],
+            ["Cumulative Cost", [
+                { label: "Cumulative", data: p.cumulativeCost, borderColor: COLORS.Manufacturer, backgroundColor: 'rgba(107, 114, 128, 0.1)' }
+            ]]
+        ];
+
+        charts.forEach(([title, ds]) => {
+            const canvas = makeCard(title, contentRef);
+            buildChart(canvas, weeks, ds.map(d => ({
+                ...d,
+                tension: 0.3,
+                pointRadius: 3,
+                borderWidth: 2
+            })), title);
+        });
+    }
+
+    const showCompareCharts = (key, contentRef, data) => {
+        clearCharts();
+        contentRef.current.innerHTML = "";
+
+        const titles = {
+            newOrderPlaced: "Orders (Bullwhip Effect)",
+            cumulativeCost: "Cumulative Cost Comparison"
+        };
+        
+        const canvas = makeCard(titles[key], contentRef);
+        const weeks = data["Retailer"].weeks;
+        const roles = key === "newOrderPlaced" ? ["Consumer", ...PLAYER_ROLES] : PLAYER_ROLES;
+
+        const datasets = roles.map(r => ({
+            label: r, 
+            data: data[r]?.newOrderPlaced || data[r]?.cumulativeCost, 
+            borderColor: COLORS[r],
+            tension: 0.3,
+            pointRadius: 3,
+            borderWidth: 2
+        }));
+
+        buildChart(canvas, weeks, datasets, titles[key]);
+    }
+
+
+    useEffect(() => {
+        if (!fullGameResults) return;
+
+        if (activeTab === 'graphs' && graphContainerRef.current) {
+            if (PLAYER_ROLES.includes(activeChartKey)) {
+                showPlayerCharts(activeChartKey, graphContainerRef, fullGameResults);
+            } else {
+                showCompareCharts(activeChartKey, graphContainerRef, fullGameResults);
+            }
+        }
+        return () => clearCharts();
+    }, [activeTab, activeChartKey, fullGameResults]); 
+    
+    // --- Render Guards ---
+    if (loading) {
+        return (
+            <div className="results-container loading">
+                <h1 className="results-header">Beer Game Results & Analysis</h1>
+                <div className="loading-box">
+                    <div className="loader"></div>
+                    <h2>Calculating Final Results and History...</h2>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!myData) {
+        return (
+            <div className="results-container">
+                <h1 className="results-header">Beer Game Results & Analysis</h1>
+                <div className="error-box">
+                    <h2>Error: Game data not found for your role.</h2>
+                    <p>Role: {myRole}, Room: {roomId}. Please ensure the server stored data correctly for this role.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // --- Rendering Functions ---
+
+    const renderSummary = () => (
+        <div className="summary-section fade-in">
+            <h3>🎉 Game Completed (Week {TOTAL_WEEKS}) 🎉</h3>
+            <h2>Your Total Cost: <span style={{color: COLORS.Distributor, fontWeight: 'bold'}}>${myData.totalCost.toFixed(2)}</span></h2>
+
+            <div className="cost-comparison-grid">
+                {PLAYER_ROLES.map(role => (
+                    <div key={role} className="cost-box">
+                        <h4>{role} Total Cost:</h4>
+                        <p style={{ color: COLORS[role], fontWeight: 'bold' }}>
+                            ${fullGameResults[role]?.totalCost.toFixed(2) ?? 'N/A'}
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            <h3 style={{marginTop: '40px'}}>Order History (Your Role: {myRole})</h3>
+            <PlayerHistoryTable data={myData} />
+        </div>
+    );
+
+    const renderGraphs = () => (
+        <div className="graphs-section fade-in">
+            <div className="chart-menu">
+                <h4>Individual Player Reports:</h4>
+                {PLAYER_ROLES.map(role => (
+                    <button 
+                        key={role} 
+                        onClick={() => setActiveChartKey(role)} 
+                        className={activeChartKey === role ? 'active-chart-btn' : ''}
+                        style={{borderColor: COLORS[role], color: COLORS[role]}}
+                    >
+                        {role}
+                    </button>
+                ))}
+                
+                <h4>Comparison Views:</h4>
+                {Object.entries({
+                    newOrderPlaced: "Orders (Bullwhip)",
+                    cumulativeCost: "Cumulative Cost"
+                }).map(([key, label]) => (
+                    <button 
+                        key={key} 
+                        onClick={() => setActiveChartKey(key)} 
+                        className={activeChartKey === key ? 'active-chart-btn' : ''}
+                        style={{borderColor: COLORS.Consumer, color: COLORS.Consumer}}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
+            <h2 style={{marginTop: '20px', textAlign: 'center'}}>{
+                PLAYER_ROLES.includes(activeChartKey) 
+                    ? `${activeChartKey} Report` 
+                    : (activeChartKey === 'newOrderPlaced' ? 'Orders (Bullwhip Effect)' : 'Cumulative Cost Comparison')
+            }</h2>
+            <div ref={graphContainerRef} className="chart-grid-container">
+                {/* Charts are rendered here by useEffect */}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="results-container">
+            <h1 className="results-header">Beer Game Results & Analysis</h1>
+            
+            <div className="results-tabs">
+                <button className={activeTab === 'summary' ? 'active-tab' : ''} onClick={() => setActiveTab('summary')}>Summary & History</button>
+                <button className={activeTab === 'graphs' ? 'active-tab' : ''} onClick={() => setActiveTab('graphs')}>Graphical Analysis</button>
+            </div>
+
+            <div className="results-content">
+                {activeTab === 'summary' && renderSummary()}
+                {activeTab === 'graphs' && renderGraphs()}
+            </div>
+        </div>
+    );
 }
