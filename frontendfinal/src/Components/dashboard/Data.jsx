@@ -26,9 +26,9 @@ function WeekTimeline({ currentWeek, festiveWeeks = [] }) {
             className += " active-week";
           }
           // ✅ Use the list from your backend!
-          if (festiveWeeks.includes(weekNum)) {
-            className += " festive-week";
-          }
+         if (festiveWeeks.includes(weekNum - 1)) {
+        className += " festive-week";
+      }
 
           return (
             <div key={weekNum} className={className} title={`Week ${weekNum}`}>
