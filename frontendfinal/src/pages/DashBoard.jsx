@@ -76,10 +76,10 @@ export default function Dashboard() {
   const iAmReady = me?.isReadyForNextTurn;
 
   // Use a formatter for cost display
-  const formattedCost = (me?.getWeeklyCost ?? 0).toLocaleString('en-US', {
+  const formattedCost = (me?.weeklyCost ?? 0).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+});
 
   // Prevent rendering dashboard content if the game is already finished
   if (gameStatus === 'FINISHED') {
