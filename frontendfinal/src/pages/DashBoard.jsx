@@ -61,13 +61,18 @@ export default function Dashboard() {
   const { currentWeek, players, festiveWeeks, gameStatus } = gameState; 
 
   // --- Game End Redirection Logic ---
-  useEffect(() => {
-    if (gameStatus === 'FINISHED') {
-      console.log("Game finished. Redirecting to results page.");
-      // The replace: true option prevents the user from navigating back to the dashboard
-      navigate('/gameresult', { replace: true }); 
-    }
-  }, [gameStatus, navigate]);
+  // --- Game End Redirection Logic ---
+useEffect(() => {
+  if (gameStatus === 'FINISHED') {
+
+    // 🔥 CHANGE HERE — store the actual gameId for the results page
+    localStorage.setItem("gameId", gameState.gameId);
+
+    console.log("Game finished. Redirecting to results page.");
+    navigate('/gameresult', { replace: true }); 
+  }
+}, [gameStatus, navigate]);
+
 
   const me = players.find((p) => p.role?.toUpperCase() === role?.toUpperCase());
   // The rest of the logic remains for the dashboard display:

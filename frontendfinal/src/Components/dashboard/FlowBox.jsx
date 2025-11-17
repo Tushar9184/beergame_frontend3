@@ -31,7 +31,7 @@ export default function FlowBox() {
       </div>
 
       <p className="flow-subtext">
-        Orders move from left to right • Beer moves from right to left
+        Orders move from left to right <br/> Beer moves from right to left
       </p>
     </div>
   );

@@ -110,8 +110,8 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
       <WeekTimeline currentWeek={week} festiveWeeks={festiveWeeks} />
       <div className="festive-note" style={{ textAlign: 'left', marginTop: '10px' }}>
         <p style={{ margin: 0, fontSize: '0.9em' }}>
-          **Note:** <span style={redDotStyle}></span>
-          The red circle week denotes the **festive season** (increased demand).
+          Note: <span style={redDotStyle}></span>
+          The red circle week denotes the festive season (increased demand).
         </p>
       </div>
     </>

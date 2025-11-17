@@ -71,10 +71,7 @@ export default function Card({ role, roomId, gameState = {} }) {
               <h2>{me.incomingShipment ?? 0} units</h2>
           </div>
           {/* 4. TOTAL COST */}
-          <div className="stat-box total-cost">
-              <p>💰 Total Cost</p>
-              <h2>${formattedCost}</h2> {/* Use formatted cost */}
-          </div>
+          
         </div>
 
         {/* --- NEW ORDER FORM --- */}
