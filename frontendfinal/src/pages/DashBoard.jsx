@@ -62,16 +62,30 @@ export default function Dashboard() {
 
   // --- Game End Redirection Logic ---
   // --- Game End Redirection Logic ---
-useEffect(() => {
-  if (gameStatus === 'FINISHED') {
+// --- Game End Redirection Logic ---
+  useEffect(() => {
+    if (gameStatus === 'FINISHED') {
+      
+      // 1. Find 'me' in the players list
+      const myRole = localStorage.getItem("role");
+      const me = players.find((p) => p.role?.toUpperCase() === myRole?.toUpperCase());
 
-    // 🔥 CHANGE HERE — store the actual gameId for the results page
-    localStorage.setItem("gameId", gameState.gameId);
+      // 2. CRITICAL FIX: Get the ID from the PLAYER object first.
+      // In Room Mode: me.gameId will be the actual Game ID (e.g., "ABC..."), 
+      // while gameState.gameId might be the Room ID (e.g., "QSL...").
+      const correctGameId = me?.gameId || gameState.gameId;
 
-    console.log("Game finished. Redirecting to results page.");
-    navigate('/gameresult', { replace: true }); 
-  }
-}, [gameStatus, navigate]);
+      if (correctGameId) {
+          console.log("✅ Saving Correct Game ID:", correctGameId);
+          localStorage.setItem("gameId", correctGameId);
+          
+          console.log("Game finished. Redirecting to results page.");
+          navigate('/gameresult', { replace: true }); 
+      } else {
+          console.error("❌ CRITICAL: Could not find Game ID in player object or game state");
+      }
+    }
+  }, [gameStatus, navigate, players, gameState]);
 
 
   const me = players.find((p) => p.role?.toUpperCase() === role?.toUpperCase());
