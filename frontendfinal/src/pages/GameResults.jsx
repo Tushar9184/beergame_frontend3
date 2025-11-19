@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Chart from "chart.js/auto";
 
 // -------------------------- CONFIG --------------------------
@@ -13,22 +13,66 @@ const COLORS = {
   Manufacturer: "#6B7280",
 };
 
-const ACTIVE_CHARTS = [];
-const clearCharts = () => {
-  ACTIVE_CHARTS.forEach((ch) => ch.destroy());
-  ACTIVE_CHARTS.length = 0;
+// -------------------------- SUB-COMPONENT --------------------------
+// This component handles the lifecycle of a SINGLE chart.
+// It creates it on mount, updates it on prop change, and destroys it on unmount.
+const GameChart = ({ title, labels, datasets }) => {
+  const canvasRef = useRef(null);
+  const chartInstanceRef = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    // 1. Cleanup previous instance if it exists
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+    }
+
+    // 2. Create new chart
+    const ctx = canvasRef.current.getContext("2d");
+    chartInstanceRef.current = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: datasets,
+      },
+      options: {
+        animation: true,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "top" },
+          title: { display: false },
+        },
+      },
+    });
+
+    // 3. Cleanup on unmount (React automatically runs this when the component is removed)
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+      }
+    };
+  }, [labels, datasets]); // Re-run if data changes
+
+  return (
+    <div className="card result-chart-card">
+      <h3>{title}</h3>
+      <div style={{ position: "relative", height: "300px", width: "100%" }}>
+        <canvas ref={canvasRef} />
+      </div>
+    </div>
+  );
 };
 
-// -------------------------- FETCH GAME HISTORY --------------------------
+// -------------------------- FETCH HELPER --------------------------
 async function fetchGameHistory(gameId) {
   console.log(`Fetching ACTUAL history for Game: ${gameId}`);
-
   if (!gameId) return {};
 
   const BASE_URL =
     process.env.REACT_APP_API_BASE ||
     "https://the-beer-game-backend.onrender.com";
-
   const token = localStorage.getItem("token");
 
   try {
@@ -65,7 +109,6 @@ async function fetchGameHistory(gameId) {
       };
 
       processedData[roleKey] = dataArrays;
-
       if (roleKey === "RETAILER") retailerDemand = dataArrays.demandRecieved;
     }
 
@@ -86,9 +129,8 @@ async function fetchGameHistory(gameId) {
 // -------------------------- MAIN COMPONENT --------------------------
 export default function GameResults() {
   const storedRole = localStorage.getItem("role");
-
-  // 🔥 FIXED — USE GAME ID, NOT ROOM ID
   const gameId = localStorage.getItem("gameId");
+  const Role = localStorage.getItem("role");
 
   const myRoleKey = storedRole ? storedRole.toUpperCase() : "RETAILER";
   const myRoleDisplay =
@@ -96,18 +138,14 @@ export default function GameResults() {
 
   const [fullGameResults, setFullGameResults] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [activeTab, setActiveTab] = useState("summary");
   const [activeChartKey, setActiveChartKey] = useState(myRoleDisplay);
-
-  const graphContainerRef = useRef(null);
 
   useEffect(() => {
     if (!gameId) {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     fetchGameHistory(gameId)
       .then((data) => setFullGameResults(data))
@@ -116,78 +154,67 @@ export default function GameResults() {
 
   const myData = fullGameResults ? fullGameResults[myRoleKey] : null;
 
-  // -------------------------- CHARTS --------------------------
-  const makeCard = (title, containerRef) => {
-    const card = document.createElement("div");
-    card.className = "card result-chart-card";
+  // -------------------------- CHART DATA LOGIC --------------------------
+  // Instead of manipulating the DOM, we calculate WHAT charts to show
+  const chartsToRender = useMemo(() => {
+    if (!fullGameResults) return [];
 
-    const label = document.createElement("h3");
-    label.textContent = title;
-    card.appendChild(label);
+    // CASE 1: Specific Role Selected (e.g., "Retailer")
+    if (PLAYER_ROLES.includes(activeChartKey)) {
+      const roleKey = activeChartKey.toUpperCase();
+      const p = fullGameResults[roleKey];
+      if (!p) return [];
 
-    const canvas = document.createElement("canvas");
-    card.appendChild(canvas);
-
-    containerRef.current.appendChild(card);
-    return canvas;
-  };
-
-  const buildChart = (canvas, labels, datasets, title) => {
-    const chart = new Chart(canvas.getContext("2d"), {
-      type: "line",
-      data: { labels, datasets },
-      options: {
-        animation: true,
-        responsive: true,
-        maintainAspectRatio: false,
-      },
-    });
-    ACTIVE_CHARTS.push(chart);
-  };
-
-  useEffect(() => {
-    if (!fullGameResults) return;
-
-    if (activeTab === "graphs" && graphContainerRef.current) {
-      clearCharts();
-
-      if (PLAYER_ROLES.includes(activeChartKey)) {
-        const roleKey = activeChartKey.toUpperCase();
-        const p = fullGameResults[roleKey];
-        if (!p) return;
-
-        const charts = [
-          ["Orders vs Week", [
-            { label: "Orders Received", data: p.demandRecieved },
-            { label: "Orders Placed", data: p.orderPlaced }
-          ]],
-        ];
-
-        charts.forEach(([title, ds]) => {
-          const canvas = makeCard(title, graphContainerRef);
-          buildChart(canvas, p.weekDay, ds, title);
-        });
-
-      } else {
-        const weeks = fullGameResults["RETAILER"]?.weekDay;
-        const dataset = PLAYER_ROLES.map((role) => {
-          const key = role.toUpperCase();
-          return {
-            label: role,
-            data: fullGameResults[key]?.[activeChartKey],
-          };
-        });
-
-        const canvas = makeCard("Comparison Chart", graphContainerRef);
-        buildChart(canvas, weeks, dataset, "Comparison");
-      }
+      return [
+        {
+          id: "orders-vs-week", // Unique key for React
+          title: "Orders vs Week",
+          labels: p.weekDay,
+          datasets: [
+            {
+              label: "Orders Received",
+              data: p.demandRecieved,
+              borderColor: COLORS.Consumer,
+              backgroundColor: COLORS.Consumer,
+            },
+            {
+              label: "Orders Placed",
+              data: p.orderPlaced,
+              borderColor: COLORS[activeChartKey] || "black",
+              backgroundColor: COLORS[activeChartKey] || "black",
+            },
+          ],
+        },
+      ];
     }
 
-    return () => clearCharts();
-  }, [activeTab, activeChartKey, fullGameResults]);
+    // CASE 2: Comparison View (e.g., "orderPlaced" or "totalCost")
+    // We need x-axis labels (weeks), usually from Retailer data
+    const weeks = fullGameResults["RETAILER"]?.weekDay || [];
 
-  if (loading)
-    return <h1>Loading results...</h1>;
+    const datasets = PLAYER_ROLES.map((role) => {
+      const key = role.toUpperCase();
+      return {
+        label: role,
+        data: fullGameResults[key]?.[activeChartKey] || [],
+        borderColor: COLORS[role],
+        backgroundColor: COLORS[role],
+      };
+    });
+
+    return [
+      {
+        id: "comparison-chart",
+        title: "Comparison Chart",
+        labels: weeks,
+        datasets: datasets,
+      },
+    ];
+  }, [fullGameResults, activeChartKey]);
+
+  // -------------------------- RENDER --------------------------
+
+  if (loading) return <h1>Loading results...</h1>;
 
   if (!myData)
     return (
@@ -226,7 +253,7 @@ export default function GameResults() {
       {activeTab === "summary" && (
         <div className="summary-section">
           <h3>🎉 Game Completed (Week {TOTAL_WEEKS}) 🎉</h3>
-
+          <h3>Role : {Role}</h3>
           <h2>
             Your Total Cost:{" "}
             <span style={{ color: COLORS.Distributor }}>
@@ -279,17 +306,25 @@ export default function GameResults() {
                 {r}
               </button>
             ))}
-
             <button onClick={() => setActiveChartKey("orderPlaced")}>
               Orders (Bullwhip)
             </button>
-
             <button onClick={() => setActiveChartKey("totalCost")}>
               Total Cost
             </button>
           </div>
 
-          <div ref={graphContainerRef} className="chart-grid-container"></div>
+          <div className="chart-grid-container">
+            {/* 🔥 THIS MAPS OVER DATA, AUTOMATICALLY HANDLING DOM CREATION/REMOVAL */}
+            {chartsToRender.map((chartConfig) => (
+              <GameChart
+                key={chartConfig.id}
+                title={chartConfig.title}
+                labels={chartConfig.labels}
+                datasets={chartConfig.datasets}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

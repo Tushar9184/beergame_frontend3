@@ -133,8 +133,8 @@ export default function HowToPlay() {
                 
                 <ul className="how-list">
                     <li><span>🎯</span> Goal: Minimize your total supply chain cost</li>
-                    <li><span>📦</span> Inventory costs $0.50 per unit per week</li>
-                    <li><span>⚠️</span> Backlog costs $1.00 per unit per week</li>
+                    <li><span>📦</span> Inventory costs $0.75 per unit per week</li>
+                    <li><span>⚠️</span> Backlog costs $1.50 per unit per week</li>
                     <li><span>🚚</span> Orders & shipments take 2 weeks to arrive</li>
                 </ul>
             </div>
@@ -149,15 +149,15 @@ export default function HowToPlay() {
             <h2 className="how-title">The Rules of the Beer Distribution Game</h2>
 
             <ul className="how-list">
-                <li><span>🎯</span> **Goal:** Minimize your total supply chain cost</li>
-                <li><span>📦</span> **Inventory Cost:** Costs **$0.50** per unit per week</li>
-                <li><span>⚠️</span> **Backlog Cost:** Costs **$1.00** per unit per week (Penalty for unfulfilled demand)</li>
-                <li><span>🚚</span> **Lead Time:** Orders & shipments take **2 weeks** to arrive</li>
-                <li><span>🤝</span> **Information:** You only see the incoming order from your immediate downstream customer.</li>
+                <li><span>🎯</span> Goal: Minimize your total supply chain cost</li>
+                <li><span>📦</span> Inventory Cost: Costs $0.75 per unit per week</li>
+                <li><span>⚠️</span> Backlog Cost: Costs $1.50 per unit per week (Penalty for unfulfilled demand)</li>
+                <li><span>🚚</span> Lead Time: Orders & shipments take 2 weeks to arrive</li>
+                <li><span>🤝</span> Information: You only see the incoming order from your immediate downstream customer.</li>
             </ul>
 
             <p className="flow-subtext" style={{ marginTop: '2rem' }}>
-                *Submit your weekly order using the card above.*
+                Submit your weekly order using the card above.
             </p>
         </div>
     );

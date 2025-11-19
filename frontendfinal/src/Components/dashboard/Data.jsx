@@ -89,7 +89,7 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
             <span>📤</span>
           </div>
           <div className="data-text">
-            <p>Your Order (Next Week)</p>
+            <p>Order Placed</p>
             <h2>{myOrder} units</h2>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
             <span>⬇️</span>
           </div>
           <div className="data-text">
-            <p>Incoming Order (Demand)</p>
+            <p>Coustomer Demand</p>
             <h2>{demand} units</h2>
           </div>
         </div>
