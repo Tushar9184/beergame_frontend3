@@ -350,14 +350,7 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Roboto', sans-serif;
-  background-color: var(--light-bg);
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+
 
 /* Main Form Container */
 .login-container {
