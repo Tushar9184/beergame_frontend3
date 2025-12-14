@@ -1,9 +1,6 @@
 // src/services/user-service.js
 import { myAxios } from "./Helper";
 
-/* ============================================================
-   AUTH SECTION
-   ============================================================ */
 
 export const loginUser = async (userData) => {
   const res = await myAxios.post("/auth/login", userData);

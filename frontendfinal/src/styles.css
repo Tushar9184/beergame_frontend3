@@ -1,7 +1,7 @@
 :root {
     --container: 1100px;
-    --accent: #ffb703; /* Beer gold accent */
-    --accent-dark: #fb8500;
+    --accent:  blue; /* Beer gold accent */
+    --accent-dark: rgba(0, 76, 255, 0.852);
     --background: #fdfcf8;
     --muted: #555;
     --text: #222;
@@ -78,7 +78,7 @@
 }
 
 .nav-links a:hover {
-  color: #0077cc;
+  color: black;
 }
 
 /* ACTION BUTTONS (Login + Create Game) */
@@ -208,7 +208,7 @@
   
   /* FEATURES */
   .benefits-section {
-    background-color:  #fa8303db; /* dark navy background */
+    background-color:  blue; /* dark navy background */
     color: #fff;
     text-align: center;
     padding: 5rem 2rem;
@@ -330,78 +330,135 @@
     }
   }
   /* background and center form */
-.login-container {
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* Global Reset & Variables */
+:root {
+  --primary-blue: #0056b3;    /* Deep professional blue */
+  --secondary-blue: #004494;  /* Darker blue for hover states */
+  --light-bg: #f0f2f5;        /* Very light gray-blue background */
+  --white: #ffffff;
+  --text-dark: #333333;       /* Soft black for text */
+  --text-light: #666666;      /* Gray for secondary text */
+  --border-color: #dfe1e5;    /* Subtle border gray */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--light-bg);
   height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #fff9c4, #ffe082, #ffcc80);
-  font-family: "Poppins", sans-serif;
+}
+
+/* Main Form Container */
+.login-container {
+  background-color: var(--white);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 450px; /* Ensures it doesn't get too wide on big screens */
+  margin: 20px;
+  text-align: center;
+  border-top: 5px solid var(--primary-blue); /* Professional blue accent bar on top */
 }
 
 /* Title */
 .login-title {
-  margin-bottom: 20px;
-  color: #e65100;
+  color: var(--primary-blue);
   font-size: 2rem;
   font-weight: 700;
+  margin-bottom: 2rem;
 }
 
-/* Form styling */
+/* Form Structure */
 .login-form {
-  background: #ffffffcc;
-  padding: 25px 35px;
-  border-radius: 12px;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
-  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Spacing between form elements */
 }
 
-/* Input groups */
+/* Input Groups */
 .input-group {
-  margin-bottom: 15px;
+  text-align: left;
   display: flex;
   flex-direction: column;
 }
 
 .input-group label {
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #e65100;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
 }
 
+/* Inputs */
 .input-group input {
-  padding: 10px;
-  border: 1px solid #ffb74d;
-  border-radius: 8px;
-  outline: none;
-  transition: 0.2s;
-  background: #fffef4;
-}
-
-.input-group input:focus {
-  border-color: #fb8c00;
-  box-shadow: 0 0 6px rgba(251, 140, 0, 0.5);
-}
-
-/* Button */
-.login-btn {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  background: #fb8c00;
-  color: white;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
   font-size: 1rem;
-  font-weight: bold;
-  border-radius: 8px;
+  color: var(--text-dark);
+  transition: all 0.3s ease;
+  background-color: #fbfbfb; /* Slightly off-white input bg */
+}
+
+/* Input Focus State - The Professional Blue Glow */
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2); /* Blue glow ring */
+  background-color: var(--white);
+}
+
+/* Primary Button */
+.login-btn {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  background-color: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
 .login-btn:hover {
-  background: #ef6c00;
-  transform: scale(1.03);
+  background-color: var(--secondary-blue);
+}
+
+.login-btn:active {
+  transform: scale(0.98); /* Slight press effect */
+}
+
+/* Bottom Switch Text */
+.signup-text {
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+.signup-link {
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.signup-link:hover {
+  color: var(--secondary-blue);
+  text-decoration: underline;
 }
 
 /* Signup text */
@@ -413,7 +470,7 @@
 }
 
 .signup-link {
-  color: #e65100;
+  color: blue;
   font-weight: 600;
   text-decoration: none;
 }
@@ -430,7 +487,7 @@
 .dashboard-h1 {
   font-size: 2.8rem;
   font-weight: 700;
-  color: #e9a400; /* soft beer-yellow tone */
+  color: blue; /* soft beer-yellow tone */
   margin-bottom: 8px;
 }
 
@@ -492,7 +549,7 @@
 .flow-title {
   font-size: 1.4rem;
   font-weight: 600;
-  color: #e7a400;
+  color: blue;
   margin-bottom: 15px;
 }
 

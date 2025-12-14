@@ -1,5 +1,5 @@
 import React from "react";
-
+import beerGameImage from './beergame.png';
 
 export default function Hero() {
   return (
@@ -22,7 +22,8 @@ export default function Hero() {
 
       <div className="hero-right">
         <div className="hero-card">
-        <img src="/assets/beer-illustration.jpg" alt="Beer game preview" />
+        <img src={beerGameImage} alt="Beer game preview" />
+
         </div>
       </div>
     </section>

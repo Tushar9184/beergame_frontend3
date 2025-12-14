@@ -5,50 +5,49 @@ import "../styles.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const data = await loginUser({ username, password });
-
-      // Save login info
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
-
       navigate('/');
     } catch (err) {
       console.log(err);
-      alert("Invalid username or password");
+      const errorMessage = err.response?.data?.message || "Invalid username or password";
+      alert(errorMessage);
     }
   };
 
   return (
+    // The body styles in CSS will center this container
     <div className="login-container">
       <h1 className="login-title">Welcome Back</h1>
 
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="input-group">
-          <label>Username</label>
+          <label htmlFor="login-username">Username</label>
           <input 
+            id="login-username"
             type="text"
             value={username}
             onChange={(e)=>setUsername(e.target.value)}
-            placeholder="Enter username"
+            placeholder="e.g., john_doe"
             required
           />
         </div>
 
         <div className="input-group">
-          <label>Password</label>
+          <label htmlFor="login-password">Password</label>
           <input 
+            id="login-password"
             type="password"
             value={password}
             onChange={(e)=>setPassword(e.target.value)}
-            placeholder="Enter password"
+            placeholder="••••••••"
             required
           />
         </div>
@@ -56,7 +55,7 @@ export default function LoginPage() {
         <button className="login-btn" type="submit">Login</button>
 
         <p className="signup-text">
-          Don't have an account? <Link className="signup-link" to="/sign">Sign up</Link>
+          Don't have an account? <Link className="signup-link" to="/sign">Sign up now</Link>
         </p>
       </form>
     </div>
