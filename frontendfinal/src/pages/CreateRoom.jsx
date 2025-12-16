@@ -1,83 +1,109 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-// 1. ✅ FIX: Use { createRoom } for a named export
-import { createRoom } from "../services/user-service";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createGameRoom, joinGameRoom } from '../services/user-service'; // Import BOTH
+import './room.css';
 
-export default function CreateRoom() {
-  const navigate = useNavigate();
+const ROLES = ['Manufacturer', 'Wholesaler', 'Distributor', 'Retailer'];
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("Retailer");
+const CreateRoom = () => {
+    const navigate = useNavigate();
+    
+    // Host Details
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    
+    // Team Details (Host's Seat)
+    const [teamName, setTeamName] = useState('');
+    const [selectedRole, setSelectedRole] = useState(ROLES[0]);
+    
+    const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-    const storedEmail = localStorage.getItem("email");
-
-    if (!storedUsername || !storedEmail) {
-      alert("Please sign up / login first");
-      navigate("/login");
-      return;
-    }
-
-    setUsername(storedUsername);
-    setEmail(storedEmail);
-  }, [navigate]);
-
-  const handleCreateRoom = async (e) => {
-    e.preventDefault();
-
-    try {
-      // 2. ✅ FIX: Call with no arguments, as per your backend
-      const res = await createRoom(); 
-      
-      // 3. ✅ FIX: Get the 'id' from the GameRoom response
-      const roomId = res.id; 
-
-      // 4. ✅ FIX: Save the role here, since the service can't
-      localStorage.setItem("role", role);
-
-      alert(`Room created ✅ ID: ${roomId}`);
-      navigate(`/dashboard/${roomId}`);
-    } catch (err) {
-      console.error(err);
-      // If you get a 403, it means your /api/room/create endpoint *is*
-      // secured, and you must update user-service.jsx to send a token.
-      alert("Room creation failed");
-    }
-  };
-
-  return (
-    <div className="login-container">
-      <h1>Create Game Room 🎲</h1>
-
-      <form className="login-form" onSubmit={handleCreateRoom}>
+    const handleCreate = async () => {
+        if (!username || !email || !teamName) return alert("Please fill in all fields");
         
-        <div className="input-group">
-          <label>Username</label>
-          <input type="text" value={username} disabled />
-        </div>
+        setIsLoading(true);
+        try {
+            // STEP 1: Create the Room (Get ID)
+            const roomData = await createGameRoom(username, email);
+            const newRoomId = roomData.roomId; // Ensure backend returns 'roomId'
+            
+            // STEP 2: Immediately Join that Room
+            // This places the host in the specific seat they chose
+            await joinGameRoom(newRoomId, teamName, selectedRole, username);
 
-        <div className="input-group">
-          <label>Email</label>
-          {/* ✅ FIX: Add the 'disabled' prop here */}
-          <input type="email" value={email} disabled />
-        </div>
+            // STEP 3: Save Session Info
+            localStorage.setItem("username", username);
+            localStorage.setItem("isHost", "true");
+            localStorage.setItem("teamName", teamName);
+            localStorage.setItem("role", selectedRole);
 
-        <div className="input-group">
-          <label>Role</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option>Retailer</option>
-            <option>Wholesaler</option>
-            <option>Distributor</option>
-            <option>Factory</option>
-          </select>
-        </div>
+            // STEP 4: Navigate
+            navigate(`/room/${newRoomId}`);
+            
+        } catch (error) {
+            console.error(error);
+            alert("Error creating room. Check console.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        <button className="login-btn" type="submit">
-          Create Room
-        </button>
-      </form>
-    </div>
-  );
-}
+    return (
+        <div className="room-container">
+            <div className="form-box">
+                <h1 className="room-title">Create Room 🏭</h1>
+                <p className="room-subtitle">Host a 16-player simulation</p>
+                
+                {/* --- Host Info --- */}
+                <label className="label-text">Username</label>
+                <input 
+                    className="room-input"
+                    type="text" 
+                    placeholder="Host Name" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
+                />
+
+                <label className="label-text">Email</label>
+                <input 
+                    className="room-input"
+                    type="email" 
+                    placeholder="host@example.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                />
+
+                <hr style={{margin: '20px 0', border: '0', borderTop: '1px solid #eee'}} />
+
+                {/* --- Team Info (New Part) --- */}
+                <label className="label-text">Your Team Name</label>
+                <input 
+                    className="room-input"
+                    type="text" 
+                    placeholder="e.g. Team Alpha" 
+                    value={teamName} 
+                    onChange={(e) => setTeamName(e.target.value)} 
+                />
+
+                <label className="label-text">Your Role</label>
+                <select 
+                    className="room-select" 
+                    value={selectedRole} 
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                >
+                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+
+                <button 
+                    className="room-btn"
+                    onClick={handleCreate} 
+                    disabled={isLoading}
+                >
+                    {isLoading ? "Creating..." : "Generate & Join"}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default CreateRoom;

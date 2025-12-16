@@ -1,0 +1,207 @@
+/* =========================================
+   1. GLOBAL LAYOUT (Used by all Room pages)
+   ========================================= */
+.room-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8fafc; /* Very light blue-grey */
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  padding: 40px 20px;
+}
+
+.header-info {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.room-title {
+  font-size: 2.5rem;
+  color: #1e293b;
+  margin: 0;
+  font-weight: 800;
+  text-align: center;
+}
+
+.room-subtitle {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* =========================================
+   2. FORM STYLES (Create & Join Pages)
+   ========================================= */
+.form-box {
+  background-color: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 450px; /* Limits width for better readability */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Adds space between inputs */
+  border: 1px solid #e2e8f0;
+}
+
+.label-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.room-input, 
+.room-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #1e293b;
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.room-input:focus, 
+.room-select:focus {
+  outline: none;
+  border-color: #2563eb; /* Blue border on focus */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* Subtle blue glow */
+}
+
+.room-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.room-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.room-btn:active {
+  transform: translateY(1px);
+}
+
+.room-btn:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================================
+   3. GRID STYLES (Waiting Room)
+   ========================================= */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 25px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.team-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-title {
+  text-align: center;
+  font-size: 1.25rem;
+  color: #334155;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 12px;
+  margin: 0 0 5px 0;
+  font-weight: 700;
+}
+
+/* --- THE BUTTONS (SLOTS) --- */
+.role-slot {
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth animation */
+  position: relative;
+  overflow: hidden;
+}
+
+.role-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.player-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* --- STATE: AVAILABLE (Green) --- */
+.status-free {
+  background-color: #ecfdf5; /* Light Green */
+  color: #059669;
+  border-color: #a7f3d0;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #6ee7b7; /* 3D bottom edge */
+}
+
+/* Hover Effect for Available */
+.status-free:hover {
+  background-color: #d1fae5;
+  transform: translateY(-2px); /* Lifts up */
+  box-shadow: 0 4px 0 #6ee7b7, 0 8px 10px rgba(0,0,0,0.1); /* Bigger shadow */
+}
+
+/* Click (Active) Effect */
+.status-free:active {
+  transform: translateY(2px); /* Pushes down */
+  box-shadow: 0 0 0 #6ee7b7; /* Shadow disappears (pressed flat) */
+  background-color: #a7f3d0;
+}
+
+/* --- STATE: TAKEN (Red/Grey) --- */
+.status-taken {
+  background-color: #f1f5f9; /* Grey */
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+/* --- STATE: ME (Blue) --- */
+.status-me {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); /* Glowing Ring */
+  font-weight: bold;
+}
+
+.status-me .player-name::after {
+  content: " (You)";
+  font-size: 0.8em;
+  opacity: 0.8;
+}

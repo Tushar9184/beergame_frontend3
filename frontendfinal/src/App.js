@@ -8,11 +8,14 @@ import CreateLobby from "./pages/CreateLobby"
 import Contact from "./pages/Contact"
 import About from "./pages/About"
 import Learn from "./pages/Learn"
-import CreateRoom from "./pages/CreateRoom"
+
 import JoinLobby from "./pages/JoinLobby"
 import LobbyWaiting from "./pages/LobbyWaiting"
 import HowToPlay from "./Components/dashboard/Footer.jsx";
 import GameResults from "./pages/GameResults"
+import CreateRoom from "./pages/CreateRoom";
+import JoinRoom from "./pages/JoinRoom";
+import RoomWaiting from "./pages/RoomWaiting";
 const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
   { path: "/login", element: <LoginPage /> },
@@ -27,7 +30,10 @@ const router = createBrowserRouter([
   {path:"/joinlobby",element:<JoinLobby/>},
   { path:"/lobby/:roomId", element:<LobbyWaiting />},
   { path: "/howtoplay", element: <HowToPlay /> },
-  { path: "/gameresult", element: <GameResults /> }
+  { path: "/gameresult", element: <GameResults /> },
+  { path: "/createroom", element: <CreateRoom /> },
+  { path: "/joinroom", element: <JoinRoom /> },
+  { path: "/room/:roomId", element: <RoomWaiting /> }
 
 ]);
 
