@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import LoginPage from "./pages/loginPage";
 import HomePage from "./pages/Home";
+import LandingPage from "./pages/LandingPage";
 import DashBoard from "./pages/DashBoard";
 import Check from "./Check";
 import SignUpPage from "./pages/SignUpPage";
@@ -16,8 +17,13 @@ import GameResults from "./pages/GameResults"
 import CreateRoom from "./pages/CreateRoom";
 import JoinRoom from "./pages/JoinRoom";
 import RoomWaiting from "./pages/RoomWaiting";
+const RootElement = () => {
+  const token = localStorage.getItem("token");
+  return token ? <HomePage /> : <LandingPage />;
+};
+
 const router = createBrowserRouter([
-  { path: "/", element: <HomePage /> },
+  { path: "/", element: <RootElement /> },
   { path: "/login", element: <LoginPage /> },
   {path:"/dashboard/:roomId", element:<DashBoard /> },
   {path:"/check", element:<Check /> },
