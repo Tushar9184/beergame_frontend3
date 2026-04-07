@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getOtpFromBackend, registerUser } from "../services/user-service";
-import "../styles.css";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, CheckCircle2 } from "lucide-react";
+import "./Auth.css";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -46,85 +48,163 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="login-container">
-      {/* Removed emojis for a more strictly professional look, added descriptive subtitle */}
-      <h1 className="login-title">
-        {step === 1 ? "Create Account" : "Verification"}
-      </h1>
+    <div className="auth-page-wrapper">
+      <div className="auth-bg-overlay"></div>
       
-      {step === 1 && (
-        <form className="login-form" onSubmit={handleSendOtp}>
-          <div className="input-group">
-            <label htmlFor="signup-username">Username</label>
-            <input 
-              id="signup-username"
-              type="text" 
-              value={username}
-              onChange={(e)=>setUsername(e.target.value)}
-              placeholder="Choose a username" 
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="signup-email">Email Address</label>
-            <input 
-              id="signup-email"
-              type="email" 
-              value={email}
-              onChange={(e)=>setEmail(e.target.value)}
-              placeholder="name@example.com" 
-              required
-            />
-          </div>
-
-          <div className="input-group">
-            <label htmlFor="signup-password">Password</label>
-            <input 
-              id="signup-password"
-              type="password" 
-              value={password}
-              onChange={(e)=>setPassword(e.target.value)}
-              placeholder="Create a strong password" 
-              required
-            />
-          </div>
-
-          <button className="login-btn" type="submit">Continue</button>
-
-          <p className="signup-text">
-            Already have an account? <Link className="signup-link" to="/login">Log in here</Link>
-          </p>
-        </form>
-      )}
-
-      {step === 2 && (
-        <form className="login-form" onSubmit={handleRegister}>
-           <p style={{color: 'var(--text-light)', marginBottom: '1rem'}}>
-             We've sent a verification code to {email}
-           </p>
-          <div className="input-group">
-            <label htmlFor="otp-input">Enter OTP Code</label>
-            <input 
-              id="otp-input"
-              type="text"
-              maxLength="6"
-              style={{letterSpacing: '4px', textAlign: 'center', fontSize: '1.2rem'}}
-              value={enteredOtp}
-              onChange={(e)=>setEnteredOtp(e.target.value)}
-              placeholder="• • • • • •" 
-              required
-            />
-          </div>
-
-          <button className="login-btn" type="submit">Complete Registration</button>
+      <div className="auth-content">
+        <motion.div 
+          className="auth-hero"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <div className="hero-subtitle">DEPLOYMENT SELECTION</div>
+          <h1 className="hero-title-main">CHOOSE<br />YOUR<br />SECTOR.</h1>
+          <h2 className="hero-title-ghost">DISTRIBUTOR.<br />MANUFACTURER.</h2>
           
-          {/* Option to go back if email was wrong */}
-          <p className="signup-text">
-            Wrong email? <span className="signup-link" style={{cursor:'pointer'}} onClick={() => setStep(1)}>Go back</span>
-          </p>
-        </form>
-      )}
+          <div className="hero-quote">
+            THE BULLWHIP EFFECT IS REAL. EVERY DECISION IN THE CHAIN IMPACTS GLOBAL STABILITY. RECRUITMENT IS OPEN.
+          </div>
+        </motion.div>
+
+        <motion.div 
+          className="auth-form-section"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+        >
+          <div className="auth-card">
+            <div className="auth-card-header">
+              <Shield size={24} className="auth-card-icon" />
+              <h2 className="auth-card-title">
+                {step === 1 ? "OPERATOR_ENROLLMENT" : "VERIFICATION_REQUIRED"}
+              </h2>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.form 
+                  key="step1"
+                  className="auth-form" 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  onSubmit={handleSendOtp}
+                >
+                  <div className="auth-input-group">
+                    <label className="auth-label" htmlFor="signup-username">IDENTIFICATION_NAME</label>
+                    <input 
+                      className="auth-input"
+                      id="signup-username"
+                      type="text" 
+                      value={username}
+                      onChange={(e)=>setUsername(e.target.value)}
+                      placeholder="COMMANDER NAME" 
+                      required
+                    />
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label className="auth-label" htmlFor="signup-email">COMMS_CHANNEL_EMAIL</label>
+                    <input 
+                      className="auth-input"
+                      id="signup-email"
+                      type="email" 
+                      value={email}
+                      onChange={(e)=>setEmail(e.target.value)}
+                      placeholder="SECURE_ADDRESS@SYSTEM.COM" 
+                      required
+                    />
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label className="auth-label" htmlFor="signup-password">PASS_KEY</label>
+                    <input 
+                      className="auth-input"
+                      id="signup-password"
+                      type="password" 
+                      value={password}
+                      onChange={(e)=>setPassword(e.target.value)}
+                      placeholder="••••••••" 
+                      required
+                    />
+                  </div>
+
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="auth-submit-btn" 
+                    type="submit"
+                  >
+                    CONTINUE
+                  </motion.button>
+
+                  <div className="auth-links">
+                    ALREADY AN OPERATOR? <Link className="auth-link" to="/login">INITIATE_LOGIN</Link>
+                  </div>
+                </motion.form>
+              )}
+
+              {step === 2 && (
+                <motion.form 
+                  key="step2"
+                  className="auth-form" 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  onSubmit={handleRegister}
+                >
+                   <p style={{color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1rem', fontFamily: 'monospace'}}>
+                     TRANSMITTING VERIFICATION KEY TO: {email}
+                   </p>
+                   
+                  <div className="auth-input-group">
+                    <label className="auth-label" htmlFor="otp-input">AUTHORIZATION_CODE</label>
+                    <input 
+                      className="auth-input"
+                      id="otp-input"
+                      type="text"
+                      maxLength="6"
+                      style={{letterSpacing: '8px', fontFamily: 'monospace', fontSize: '1.2rem'}}
+                      value={enteredOtp}
+                      onChange={(e)=>setEnteredOtp(e.target.value)}
+                      placeholder="• • • • • •" 
+                      required
+                    />
+                  </div>
+
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="auth-submit-btn" 
+                    type="submit"
+                  >
+                    CREATE ACCOUNT
+                  </motion.button>
+                  
+                  <div className="auth-links">
+                    INCORRECT COMMS CHANNEL? <span className="auth-link" style={{cursor:'pointer'}} onClick={() => setStep(1)}>ABORT & RETRY</span>
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="auth-footer">
+        <div className="footer-left">
+          LAT: 52.3676° N // LON: 4.9041° E // SYS_READY
+        </div>
+        <div className="footer-center footer-yellow">
+          SYSTEM TIME: WEEK 42 // BULLWHIP RATIO: 1.42 // ORDERS: +12% // QUEUE: ACTIVE
+        </div>
+        <div className="footer-right">
+          SYSTEM_STATUS &nbsp;&nbsp; ENCRYPTION_KEY &nbsp;&nbsp; LOG_OUT
+        </div>
+      </div>
     </div>
   );
 }

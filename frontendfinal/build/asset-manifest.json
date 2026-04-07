@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.d7e5488a.css",
-    "main.js": "/static/js/main.3f120c7b.js",
+    "main.css": "/static/css/main.4bc85e40.css",
+    "main.js": "/static/js/main.5e047eb1.js",
     "static/media/beergame.png": "/static/media/beergame.f6ab29d1ddc5c07ade15.png",
     "static/media/learn.png": "/static/media/learn.f22eb1255decdcb2a247.png",
     "index.html": "/index.html",
-    "main.d7e5488a.css.map": "/static/css/main.d7e5488a.css.map",
-    "main.3f120c7b.js.map": "/static/js/main.3f120c7b.js.map"
+    "main.4bc85e40.css.map": "/static/css/main.4bc85e40.css.map",
+    "main.5e047eb1.js.map": "/static/js/main.5e047eb1.js.map"
   },
   "entrypoints": [
-    "static/css/main.d7e5488a.css",
-    "static/js/main.3f120c7b.js"
+    "static/css/main.4bc85e40.css",
+    "static/js/main.5e047eb1.js"
   ]
 }
