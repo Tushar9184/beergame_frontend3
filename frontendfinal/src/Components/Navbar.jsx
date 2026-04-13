@@ -27,8 +27,8 @@ export default function Navbar() {
     <header className="navbar">
       <div className="nav-inner">
         <div className="brand">
-          <img src="/assets/BeerGameLogo.png" alt="Logo" className="logo" />
-          <span>Beer Game</span>
+          <img src="/assets/tactical_logo.png" alt="Logo" className="logo" style={{ borderRadius: '50%' }} />
+          <span>GSV BEER GAME</span>
         </div>
 
         {/* 3. Hamburger Icon (Visible only on mobile via CSS) */}
