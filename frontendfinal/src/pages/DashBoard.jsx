@@ -6,6 +6,8 @@ import FlowBox from "../Components/dashboard/FlowBox.jsx";
 import Card from "../Components/dashboard/Card.jsx";
 import HowToPlay from "../Components/dashboard/Footer.jsx";
 import { connectSocket, disconnectSocket } from "../services/socket";
+import "./DashBoard.css";
+
 
 export default function Dashboard() {
   const navigate = useNavigate();

@@ -1,0 +1,309 @@
+/*
+ * DashBoard.css - Tactical Dark Theme
+ * Matches the dark glassmorphic mockup image exactly.
+ * All selectors are scoped under .dashboard-container to avoid
+ * affecting any other page. No API / architecture changes.
+ */
+
+/* ───────────────────────────────────────────
+   BASE CONTAINER
+─────────────────────────────────────────── */
+.dashboard-container {
+    background-color: #070b11 !important;
+    min-height: 100vh;
+    color: #e2e8f0;
+    padding: 0 24px 80px;
+    background-image:
+      linear-gradient(rgba(0, 229, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ───────────────────────────────────────────
+   HEADER
+─────────────────────────────────────────── */
+.dashboard-container .dashboard-header {
+    background: transparent !important;
+    padding: 36px 20px 18px;
+    text-align: center;
+}
+.dashboard-container .dashboard-h1 {
+    color: #f0f4ff !important;
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-shadow: 0 0 24px rgba(0, 229, 255, 0.35);
+}
+.dashboard-container .dashboard-p {
+    color: #4e6080 !important;
+    font-size: 0.9rem;
+    margin-top: 6px;
+}
+.dashboard-container .player-info-bar {
+    background: rgba(0, 229, 255, 0.05) !important;
+    border: 1px solid rgba(0, 229, 255, 0.25) !important;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.08) !important;
+    border-radius: 30px;
+    display: inline-flex;
+    gap: 24px;
+    padding: 9px 28px;
+    margin-top: 14px;
+}
+.dashboard-container .player-info-bar span {
+    color: #8fa3bf;
+    font-size: 0.9rem;
+}
+.dashboard-container .player-info-bar span b {
+    color: #00e5ff;
+}
+
+/* ───────────────────────────────────────────
+   4 DATA BOXES
+─────────────────────────────────────────── */
+.dashboard-container .data-container {
+    background: transparent !important;
+    max-width: 1200px;
+    margin: 24px auto;
+    gap: 14px;
+}
+.dashboard-container .data-box {
+    background: rgba(8, 18, 34, 0.85) !important;
+    border: 1px solid rgba(0, 229, 255, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 14px rgba(0, 229, 255, 0.03) !important;
+    border-radius: 14px !important;
+    min-width: 190px;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+.dashboard-container .data-box:hover {
+    border-color: rgba(0, 229, 255, 0.4) !important;
+    box-shadow: 0 8px 32px rgba(0, 229, 255, 0.12) !important;
+    transform: translateY(-3px) !important;
+}
+.dashboard-container .data-box p {
+    color: #546880 !important;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.dashboard-container .data-box h2 {
+    color: #f0f4ff !important;
+    font-size: 1.7rem;
+    font-weight: 800;
+}
+
+/* Kill white icon circles - replace with coloured glow */
+.dashboard-container .icon-wrapper {
+    background: transparent !important;
+    border: none !important;
+    font-size: 2rem !important;
+}
+.dashboard-container .icon-wrapper.week   { color: #f59e0b; }
+.dashboard-container .icon-wrapper.cost   { color: #f87171; }
+.dashboard-container .icon-wrapper.order  { color: #34d399; }
+.dashboard-container .icon-wrapper.demand { color: #60a5fa; }
+
+/* ───────────────────────────────────────────
+   GAME TIMELINE
+─────────────────────────────────────────── */
+.dashboard-container .week-timeline-container {
+    background: rgba(8, 18, 34, 0.8) !important;
+    border: 1px solid rgba(0, 229, 255, 0.08) !important;
+    border-radius: 14px;
+    max-width: 1200px;
+    margin: 18px auto;
+    padding: 18px 20px;
+}
+.dashboard-container .week-timeline-title {
+    color: #9bb3cc !important;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+.dashboard-container .week-circle {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #3d5065 !important;
+    font-size: 0.75rem;
+}
+.dashboard-container .week-circle.past-week {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #3a4f62 !important;
+}
+.dashboard-container .week-circle.active-week {
+    background: rgba(0, 229, 255, 0.18) !important;
+    border-color: #00e5ff !important;
+    color: #fff !important;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.55) !important;
+    transform: scale(1.15) !important;
+}
+.dashboard-container .week-circle.festive-week {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5) !important;
+}
+.dashboard-container .festive-note,
+.dashboard-container .festive-note p {
+    color: #3d5268 !important;
+    font-size: 0.8rem;
+}
+
+/* ───────────────────────────────────────────
+   SUPPLY CHAIN FLOW BOX
+─────────────────────────────────────────── */
+.dashboard-container .flow-container {
+    background: rgba(8, 18, 34, 0.8) !important;
+    border: 1px solid rgba(0, 229, 255, 0.1) !important;
+    border-radius: 14px;
+    max-width: 1200px;
+    margin: 18px auto;
+    padding: 24px 32px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.4) !important;
+}
+.dashboard-container .flow-title {
+    color: #c5d8ef !important;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+.dashboard-container .flow-node {
+    background: rgba(10, 22, 42, 0.95) !important;
+    border: 1px solid rgba(0, 229, 255, 0.22) !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+    padding: 14px 22px;
+}
+.dashboard-container .flow-node p {
+    color: #9bb3cc !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.dashboard-container .flow-node.active-role {
+    background: rgba(235, 181, 66, 0.1) !important;
+    border-color: #ebb542 !important;
+    box-shadow: 0 0 22px rgba(235, 181, 66, 0.35) !important;
+}
+.dashboard-container .flow-node.active-role p {
+    color: #ebb542 !important;
+    font-weight: 800;
+}
+.dashboard-container .flow-arrow {
+    background: repeating-linear-gradient(
+      to right,
+      rgba(0, 229, 255, 0.35),
+      rgba(0, 229, 255, 0.35) 7px,
+      transparent 7px,
+      transparent 16px
+    ) !important;
+    height: 2px !important;
+}
+.dashboard-container .flow-subtext {
+    color: #344d63 !important;
+    font-size: 0.85rem;
+    margin-top: 16px;
+}
+
+/* ───────────────────────────────────────────
+   WAITING BOX
+─────────────────────────────────────────── */
+.dashboard-container .waiting-box {
+    background: rgba(8, 18, 34, 0.85) !important;
+    border: 1px solid rgba(0, 229, 255, 0.15) !important;
+    border-radius: 14px;
+    color: #e2e8f0 !important;
+}
+.dashboard-container .waiting-box h2 {
+    color: #c5d8ef !important;
+}
+.dashboard-container .waiting-text {
+    color: #546880 !important;
+}
+.dashboard-container .loader {
+    border-color: rgba(255,255,255,0.08) !important;
+    border-top-color: #00e5ff !important;
+}
+
+/* ───────────────────────────────────────────
+   RULES FOOTER  (horizontal card layout)
+─────────────────────────────────────────── */
+.dashboard-container .how-container {
+    background: rgba(8, 18, 34, 0.85) !important;
+    border: 1px solid rgba(0, 229, 255, 0.12) !important;
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin: 24px auto;
+    max-width: 1200px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+    text-align: left;
+}
+.dashboard-container .how-title {
+    color: #c5d8ef !important;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0, 229, 255, 0.15) !important;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.dashboard-container .how-list {
+    list-style: none !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 14px !important;
+    margin: 0 !important;
+}
+.dashboard-container .how-list li {
+    color: #9bb3cc !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px;
+    background: rgba(0, 229, 255, 0.04) !important;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid rgba(0, 229, 255, 0.1) !important;
+    flex: 1 1 180px;
+    min-width: 160px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.dashboard-container .how-list li span {
+    font-size: 1.6rem;
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+/* ───────────────────────────────────────────
+   WEEK 1 ORDER FORM (Footer.jsx)
+─────────────────────────────────────────── */
+.dashboard-container .place-order-form {
+    background: rgba(8, 18, 34, 0.9) !important;
+    border: 1px solid rgba(0, 229, 255, 0.2) !important;
+    border-radius: 14px;
+}
+.dashboard-container .input-group label {
+    color: #00e5ff !important;
+}
+.dashboard-container .order-input {
+    background: rgba(0,0,0,0.5) !important;
+    color: #fff !important;
+    border: 2px solid rgba(0, 229, 255, 0.25) !important;
+    border-radius: 10px;
+}
+.dashboard-container .place-order-btn {
+    background: linear-gradient(135deg, #ebb542, #cc9900) !important;
+    color: #000 !important;
+    font-weight: 800;
+    border-radius: 10px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 22px rgba(235,181,66,0.45) !important;
+    text-transform: uppercase;
+}
+.dashboard-container .place-order-btn:hover {
+    box-shadow: 0 0 42px rgba(235,181,66,0.75) !important;
+    transform: translateY(-2px);
+}
