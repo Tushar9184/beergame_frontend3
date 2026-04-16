@@ -6,9 +6,17 @@
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  background-color: #f8fafc; /* Very light blue-grey */
-  font-family: 'Segoe UI', system-ui, sans-serif;
+
+  /* ── Tactical dark background (matches Landing & About pages) ── */
+  background-color: #080c10;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+
+  font-family: "Inter", 'Segoe UI', system-ui, sans-serif;
   padding: 40px 20px;
+  color: #e2e8f0;
 }
 
 .header-info {
@@ -18,15 +26,20 @@
 
 .room-title {
   font-size: 2.5rem;
-  color: #1e293b;
+  color: #ffffff;
   margin: 0;
-  font-weight: 800;
+  font-weight: 900;
+  font-style: italic;
   text-align: center;
+  letter-spacing: -0.01em;
 }
 
 .room-subtitle {
-  color: #64748b;
-  font-size: 1.1rem;
+  color: #00e5ff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   margin-top: 10px;
   text-align: center;
 }
@@ -35,61 +48,90 @@
    2. FORM STYLES (Create & Join Pages)
    ========================================= */
 .form-box {
-  background-color: white;
+  background: rgba(11, 16, 23, 0.75);
   padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
   width: 100%;
-  max-width: 450px; /* Limits width for better readability */
+  max-width: 450px;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Adds space between inputs */
-  border: 1px solid #e2e8f0;
+  gap: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 2px solid #ebb542;
+  position: relative;
+}
+
+/* Corner accent — bottom-right */
+.form-box::after {
+  content: "";
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 16px; height: 16px;
+  border-bottom: 2px solid #ebb542;
+  border-right: 2px solid #ebb542;
 }
 
 .label-text {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
   margin-bottom: 2px;
   display: block;
+  font-family: "Courier New", Courier, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.room-input, 
+.room-input,
 .room-select {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #1e293b;
-  background-color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  background-color: rgba(5, 8, 12, 0.8);
   transition: all 0.2s ease;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
-.room-input:focus, 
+.room-input::placeholder {
+  color: #334155;
+}
+
+.room-select option {
+  background-color: #0b1017;
+  color: #e2e8f0;
+}
+
+.room-input:focus,
 .room-select:focus {
   outline: none;
-  border-color: #2563eb; /* Blue border on focus */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* Subtle blue glow */
+  border-color: #ebb542;
+  box-shadow: 0 0 0 2px rgba(235, 181, 66, 0.15);
 }
 
 .room-btn {
   width: 100%;
   padding: 14px;
   margin-top: 10px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  background-color: #ebb542;
+  color: #111;
+  border: 1px solid #ebb542;
+  border-radius: 2px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 .room-btn:hover {
-  background-color: #1d4ed8;
+  background-color: #fce18d;
+  box-shadow: 0 0 20px rgba(235, 181, 66, 0.35);
 }
 
 .room-btn:active {
@@ -97,9 +139,12 @@
 }
 
 .room-btn:disabled {
-  background-color: #94a3b8;
+  background-color: rgba(235, 181, 66, 0.25);
+  color: #64748b;
+  border-color: rgba(235, 181, 66, 0.2);
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 /* =========================================

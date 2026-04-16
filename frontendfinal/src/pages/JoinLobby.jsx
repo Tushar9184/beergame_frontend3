@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { joinLobby } from "../services/user-service";
 import { disconnectSocket } from "../services/socket";
+import "./JoinLobby.css";
 
 export default function JoinLobby() {
   const [gameId, setGameId] = useState("");

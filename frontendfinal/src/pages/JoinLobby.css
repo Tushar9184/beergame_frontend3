@@ -1,0 +1,383 @@
+/* =========================================
+   JOIN LOBBY — FULL MISSION OS LAYOUT
+   Mirrors CreateLobby page appearance
+   ZERO JSX changes — pure CSS only
+   ========================================= */
+
+@keyframes spin     { 100% { transform: rotate(360deg); } }
+@keyframes scanLine { 0% { top: -2px; opacity:.6; } 100% { top:100%; opacity:0; } }
+@keyframes fadeUp   { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes navPulse { 0%,100% { opacity:.9; } 50% { opacity:1; } }
+
+/* ────────────────────────────────────────
+   1. BASE SHELL
+──────────────────────────────────────── */
+body:has(.page-container) {
+  margin: 0; padding: 0;
+  background: #0b1115;
+  color: #e2e8f0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Sidebar background strip ─────────── */
+body:has(.page-container)::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 220px;
+  height: 100vh;
+  background: #0d1419;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ── Bottom stats bar ─────────────────── */
+body:has(.page-container)::after {
+  content: "SYSTEM TIME: WEEK 42 // BULLWHIP RATIO: 1.42 // ORDERS: +12% // QUEUE: ACTIVE";
+  position: fixed;
+  bottom: 0; left: 0;
+  width: 100%;
+  padding: 0.45rem 1.5rem;
+  background: rgba(10, 15, 18, 0.97);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.68rem;
+  color: #ebb542;
+  letter-spacing: 0.08em;
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* ────────────────────────────────────────
+   2. TOP NAVBAR  (mission-navbar)
+──────────────────────────────────────── */
+.page-container::before {
+  content: "GSV BEER GAME";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 52px;
+  line-height: 52px;
+  background: #0d151a;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-family: impact, "Arial Black", sans-serif;
+  font-style: italic;
+  font-size: 1.45rem;
+  color: #ebb542;
+  letter-spacing: 1px;
+  padding-left: 1.5rem;
+  z-index: 20;
+  pointer-events: none;
+  animation: navPulse 4s ease-in-out infinite;
+}
+
+/* ── Sidebar user info ────────────────── */
+.page-container::after {
+  content: "OP // COMMANDER\A RANK: OPERATIVE";
+  white-space: pre;
+  position: fixed;
+  top: 52px; left: 0;
+  width: 220px;
+  padding: 2rem 1.5rem 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #ebb542;
+  line-height: 1.9;
+  z-index: 7;
+  pointer-events: none;
+}
+
+/* ────────────────────────────────────────
+   3. PAGE WRAPPER  (content area right of sidebar)
+──────────────────────────────────────── */
+.page-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  /* Push content clear of sidebar + navbar + stats bar */
+  padding: 80px calc(20px) 40px calc(220px + 20px);
+  margin: 0;
+  max-width: 100%;
+  width: 100%;
+  text-align: center;
+  background: radial-gradient(circle at 60% 50%, #111a22 0%, #0b1115 100%);
+}
+
+/* ────────────────────────────────────────
+   4. SIDEBAR — active nav item
+──────────────────────────────────────── */
+.page-title::before {
+  content: "◈   JOIN MISSION";
+  position: fixed;
+  top: 162px; left: 0;
+  width: 220px;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #ebb542;
+  background: rgba(235,181,66,0.09);
+  color: #ebb542;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-align: left;
+  z-index: 7;
+  pointer-events: none;
+}
+
+/* ────────────────────────────────────────
+   5. MISSION BRIEFING TITLE
+──────────────────────────────────────── */
+.page-title {
+  position: relative;
+  z-index: 10;
+  font-family: impact, "Arial Black", sans-serif;
+  font-size: 2.8rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 1px;
+  color: #f1f5f9;
+  margin: 0;
+  line-height: 1;
+  text-align: left;
+  width: 100%;
+  max-width: 520px;
+  text-transform: uppercase;
+  animation: fadeUp 0.45s ease both;
+}
+
+/* Cyan sub-label below the title */
+.page-title::after {
+  content: "ESTABLISHING SECURE PARAMETERS // NODE_CONFIG_v2.0";
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: #00e5ff;
+  margin-top: 0.55rem;
+  margin-bottom: 2rem;
+}
+
+/* ────────────────────────────────────────
+   6. FORM CARD  (glass panel)
+──────────────────────────────────────── */
+.page-form {
+  position: relative;
+  z-index: 10;
+  background: rgba(18, 25, 33, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-top: 3px solid #ebb542;
+  padding: 3rem;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  overflow: hidden;
+  animation: fadeUp 0.45s 0.1s ease both;
+}
+
+/* Panel title inside the form (first flex item) */
+.page-form::before {
+  content: "◈  JOIN LOBBY";
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  text-align: left;
+}
+
+/* Scan line */
+.page-form::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.2), transparent);
+  animation: scanLine 5s linear infinite;
+  pointer-events: none;
+}
+
+/* ────────────────────────────────────────
+   7. INPUT GROUPS  (matches CreateLobby)
+──────────────────────────────────────── */
+.page-form .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.page-form .input-group label {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0;
+}
+
+/* ────────────────────────────────────────
+   8. INPUTS & SELECT  (underline style)
+──────────────────────────────────────── */
+.page-form input,
+.page-form select {
+  background: rgba(0, 0, 0, 0.3);
+  border: none;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+  font-size: 1rem;
+  padding: 0.75rem;
+  width: 100%;
+  font-family: "Courier New", Courier, monospace;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  outline: none;
+}
+
+.page-form input::placeholder { color: #2d3748; }
+
+.page-form input:focus {
+  border-bottom-color: #ebb542;
+  background: rgba(0,0,0,0.5);
+}
+
+/* Select uses cyan underline — matches CreateLobby's role select */
+.page-form select {
+  border-bottom-color: #00e5ff;
+  cursor: pointer;
+}
+
+.page-form select:focus {
+  border-bottom-color: #ebb542;
+  background: rgba(0,0,0,0.5);
+}
+
+.page-form select option {
+  background: #0b1115;
+  color: #e2e8f0;
+}
+
+/* ────────────────────────────────────────
+   9. SUBMIT BUTTON  (matches CreateLobby's motion.button)
+──────────────────────────────────────── */
+.page-btn {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  background-color: #ebb542;
+  color: #111;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 0 15px rgba(235, 181, 66, 0.2);
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #fce18d;
+  box-shadow: 0 0 30px rgba(235, 181, 66, 0.45);
+  transform: translateY(-2px);
+}
+
+.page-btn:active  { transform: translateY(1px); }
+.page-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* ────────────────────────────────────────
+   10. BOTTOM LINK
+──────────────────────────────────────── */
+.page-text {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+  font-family: "Courier New", Courier, monospace;
+  letter-spacing: 0.04em;
+}
+
+.page-link {
+  color: #ebb542;
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+.page-link:hover { color: #fce18d; text-decoration: underline; }
+
+/* ────────────────────────────────────────
+   11. LOADING STATE  (cyber-loader style)
+──────────────────────────────────────── */
+.waiting-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 100vh;
+  background: #0b1115;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: #e2e8f0;
+  text-align: center;
+  padding: 2rem;
+}
+
+.waiting-box h2 {
+  font-family: impact, "Arial Black", sans-serif;
+  font-style: italic;
+  font-size: 2rem;
+  color: #ebb542;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.waiting-box .sub {
+  color: #00e5ff;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Dual-colour cyber loader — same as CreateLobby .cyber-loader */
+.waiting-box .loader {
+  width: 50px; height: 50px;
+  margin: 0 auto 8px;
+  border: 3px solid transparent;
+  border-top-color: #ebb542;
+  border-bottom-color: #00e5ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  box-shadow: 0 0 14px rgba(235,181,66,0.3);
+}
+
+/* ────────────────────────────────────────
+   12. RESPONSIVE
+──────────────────────────────────────── */
+@media (max-width: 768px) {
+  body:has(.page-container)::before { display: none; }
+  .page-container::after            { display: none; }
+  .page-title::before               { display: none; }
+  .page-container {
+    padding-left: 20px;
+  }
+}
