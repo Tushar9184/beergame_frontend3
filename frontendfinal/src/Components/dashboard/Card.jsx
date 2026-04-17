@@ -44,6 +44,21 @@ export default function Card({ role, roomId, gameState = {} }) {
     maximumFractionDigits: 2,
   });
 
+  // If the player object hasn't loaded yet, show a clear message
+  // instead of silently showing all zeros (which looks like a bug)
+  if (!me || !me.role) {
+    return (
+      <div className="card-container">
+        <div className="card-item">
+          <div className="waiting-box" style={{ minHeight: 'auto', padding: '2rem' }}>
+            <div className="loader"></div>
+            <p style={{ marginTop: '1rem', color: '#94a3b8' }}>Waiting for game state...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card-container">
       <div className="card-item">
@@ -71,7 +86,10 @@ export default function Card({ role, roomId, gameState = {} }) {
               <h2>{me.incomingShipment ?? 0} units</h2>
           </div>
           {/* 4. TOTAL COST */}
-          
+          <div className="stat-box">
+              <p>💰 Total Cost</p>
+              <h2>${formattedCost}</h2>
+          </div>
         </div>
 
         {/* --- NEW ORDER FORM --- */}
@@ -94,7 +112,10 @@ export default function Card({ role, roomId, gameState = {} }) {
           </div>
 
           <button type="submit" className="submit-order-btn" disabled={me?.isReadyForNextTurn}>
-            ✔ Submit Order for Week {gameState.currentWeek}
+            {me?.isReadyForNextTurn
+              ? "✅ Order Submitted — Waiting for others..."
+              : `✔ Submit Order for Week ${gameState.currentWeek}`
+            }
           </button>
         </form>
       </div>

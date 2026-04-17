@@ -39,7 +39,7 @@ export default function LandingPage() {
                     
                     <div className="landing-button-group">
                         <Link to="/sign" className="landing-btn landing-btn-primary">INITIATE PROTOCOL</Link>
-                        <Link to="/login" className="landing-btn landing-btn-secondary">REGISTRY</Link>
+                        <Link to="/login" className="landing-btn landing-btn-secondary">LOGIN</Link>
                     </div>
                     
                     <div className="landing-metrics-grid">

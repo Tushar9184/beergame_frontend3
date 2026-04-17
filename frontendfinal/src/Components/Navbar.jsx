@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles.css"; // Ensure your CSS is imported
 
@@ -11,6 +11,19 @@ export default function Navbar() {
   
   // 2. State for Dropdown (Play button)
   const [isPlayOpen, setIsPlayOpen] = useState(false);
+  // Ref to hold the close-timeout so we can cancel it on mouse re-enter
+  const dropdownCloseTimer = useRef(null);
+
+  const openDropdown = () => {
+    // Cancel any pending close when mouse re-enters
+    clearTimeout(dropdownCloseTimer.current);
+    setIsPlayOpen(true);
+  };
+
+  const closeDropdownDelayed = () => {
+    // Wait 200ms before closing — prevents snap-close on fast mouse movement
+    dropdownCloseTimer.current = setTimeout(() => setIsPlayOpen(false), 200);
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -44,9 +57,9 @@ export default function Navbar() {
           {/* Dropdown for Play */}
           <div 
             className="dropdown-container" 
-            onMouseEnter={() => setIsPlayOpen(true)} 
-            onMouseLeave={() => setIsPlayOpen(false)}
-            onClick={() => setIsPlayOpen(!isPlayOpen)} // Click support for mobile
+            onMouseEnter={openDropdown} 
+            onMouseLeave={closeDropdownDelayed}
+            onClick={() => setIsPlayOpen(!isPlayOpen)}
           >
             <button className="nav-link-btn">
               Play ▾
@@ -54,11 +67,11 @@ export default function Navbar() {
             
             {isPlayOpen && (
               <div className="dropdown-menu">
-                <Link to="/createlobby" className="dropdown-item" onClick={toggleMobileMenu}>Create Lobby (4p)</Link>
-                <Link to="/joinlobby" className="dropdown-item" onClick={toggleMobileMenu}>Join Lobby (4p)</Link>
+                <Link to="/createlobby" className="dropdown-item" onClick={(e) => { e.stopPropagation(); setIsPlayOpen(false); toggleMobileMenu(); }}>Create Lobby (4p)</Link>
+                <Link to="/joinlobby" className="dropdown-item" onClick={(e) => { e.stopPropagation(); setIsPlayOpen(false); toggleMobileMenu(); }}>Join Lobby (4p)</Link>
                 <div className="dropdown-divider"></div>
-                <Link to="/createroom" className="dropdown-item" onClick={toggleMobileMenu}>Create Room (16p)</Link>
-                <Link to="/joinroom" className="dropdown-item" onClick={toggleMobileMenu}>Join Room (16p)</Link>
+                <Link to="/createroom" className="dropdown-item" onClick={(e) => { e.stopPropagation(); setIsPlayOpen(false); toggleMobileMenu(); }}>Create Room (16p)</Link>
+                <Link to="/joinroom" className="dropdown-item" onClick={(e) => { e.stopPropagation(); setIsPlayOpen(false); toggleMobileMenu(); }}>Join Room (16p)</Link>
               </div>
             )}
           </div>

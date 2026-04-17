@@ -50,7 +50,6 @@ export default function JoinLobby() {
     }
   };
   
-  // ... (rest of your component is fine)
   if (joining) {
     return (
       <div className="waiting-box">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { connectSocket, disconnectSocket, sendOrderWS } from "../../services/socket";
 
-export default function HowToPlay() {
+export default function HowToPlay({ embedded = false }) {
     const navigate = useNavigate();
 
     const roomId = localStorage.getItem("roomId");
@@ -26,6 +26,11 @@ export default function HowToPlay() {
 
     // Main connection effect
     useEffect(() => {
+        // When embedded inside Dashboard.jsx, skip socket management entirely.
+        // Dashboard already has its own socket — running a second one here
+        // would overwrite the callback and kill the Dashboard's connection.
+        if (embedded) return;
+
         if (!roomId) {
             navigate("/joinlobby");
             return;
@@ -41,7 +46,7 @@ export default function HowToPlay() {
         connectSocket({ roomId, onStateUpdate });
 
         return () => disconnectSocket();
-    }, [roomId, navigate]);
+    }, [roomId, navigate, embedded]);
 
     // Effect to react to game state changes
     useEffect(() => {
@@ -83,7 +88,27 @@ export default function HowToPlay() {
     const me = gameState?.players?.find((p) => p.role === myRole);
     const iAmReady = me?.isReadyForNextTurn; 
 
-    // 1. Initial Loading/Lobby State
+    /* ------ EMBEDDED MODE (used inside Dashboard.jsx) ------
+       When embedded=true, we skip all the loading/week-1 logic
+       and just render the static rules footer that Dashboard needs. */
+    if (embedded) {
+        return (
+            <div className="how-container">
+                <h2 className="how-title">The Rules of the Beer Distribution Game</h2>
+                <ul className="how-list">
+                    <li><span>🎯</span> Goal: Minimize your total supply chain cost</li>
+                    <li><span>📦</span> Inventory Cost: $0.75 per unit per week</li>
+                    <li><span>⚠️</span> Backlog Cost: $1.50 per unit per week (Penalty for unfulfilled demand)</li>
+                    <li><span>🚚</span> Lead Time: Orders &amp; shipments take 2 weeks to arrive</li>
+                    <li><span>🤝</span> Information: You only see the incoming order from your immediate downstream customer.</li>
+                </ul>
+                <p className="flow-subtext" style={{ marginTop: '2rem' }}>
+                    Submit your weekly order using the card above.
+                </p>
+            </div>
+        );
+    }
+
     if (gameStatus !== "IN_PROGRESS" || currentWeek < 1) {
         return (
             <div className="waiting-box">

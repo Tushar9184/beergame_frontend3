@@ -1,0 +1,279 @@
+/* ============================================================
+   GAME RESULTS PAGE — Tactical Dark Theme
+   Consistent with the rest of the GSV Beer Game UI
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.results-container {
+  min-height: 100vh;
+  background: #080c10;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  padding: 2rem;
+}
+
+/* ── HEADER ── */
+.results-header {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f1f5f9;
+  border-left: 4px solid #ebb542;
+  padding-left: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* ── TAB BAR ── */
+.results-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 1rem;
+}
+
+.results-tabs button {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 0.6rem 1.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.results-tabs button:hover {
+  background: rgba(235, 181, 66, 0.1);
+  border-color: rgba(235, 181, 66, 0.4);
+  color: #ebb542;
+}
+
+.results-tabs .active-tab {
+  background: rgba(235, 181, 66, 0.12);
+  border-color: #ebb542;
+  color: #ebb542;
+  font-weight: 700;
+}
+
+/* ── SUMMARY SECTION ── */
+.summary-section {
+  animation: fadeInUp 0.4s ease;
+}
+
+.summary-section h3 {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.summary-section h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: #f1f5f9;
+}
+
+/* ── HISTORY TABLE ── */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.history-table thead {
+  background: rgba(235, 181, 66, 0.08);
+  border-bottom: 2px solid rgba(235, 181, 66, 0.3);
+}
+
+.history-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ebb542;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.history-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.history-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.history-table td {
+  padding: 0.6rem 1rem;
+  color: #cbd5e1;
+}
+
+/* ── ERROR BOX ── */
+.error-box {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+.error-box h2 {
+  color: #f87171;
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.error-box p {
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+/* ── GRAPHS SECTION ── */
+.graphs-section {
+  animation: fadeInUp 0.4s ease;
+}
+
+.chart-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-menu button {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.chart-menu button:hover {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.4);
+  color: #00e5ff;
+}
+
+.chart-menu .active-chart-btn {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: #00e5ff;
+  color: #00e5ff;
+  font-weight: 700;
+}
+
+/* ── CHART GRID ── */
+.chart-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ── CHART CARD ── */
+.card.result-chart-card {
+  background: rgba(18, 25, 33, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 3px solid #ebb542;
+  border-radius: 10px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.card.result-chart-card h3 {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ebb542;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 1rem;
+}
+
+/* ── LOADING STATE ── */
+.results-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #080c10;
+  gap: 1rem;
+}
+
+.results-loading .loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(235, 181, 66, 0.2);
+  border-top-color: #ebb542;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.results-loading h2 {
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .results-container {
+    padding: 1rem;
+  }
+
+  .results-header {
+    font-size: 1.3rem;
+  }
+
+  .chart-grid-container {
+    grid-template-columns: 1fr;
+  }
+
+  .history-table {
+    font-size: 0.72rem;
+    display: block;
+    overflow-x: auto;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.5rem 0.6rem;
+  }
+}

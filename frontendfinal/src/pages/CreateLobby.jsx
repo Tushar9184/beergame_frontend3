@@ -83,7 +83,7 @@ export default function CreateLobby() {
             <div className="sidebar-username" style={{textTransform: 'uppercase'}}>
               OP // {username || "UNKNOWN"}
             </div>
-            <div className="sidebar-rank">RANK: APPRENTICE</div>
+            <div className="sidebar-rank">OPERATOR</div>
           </div>
           <div className="sidebar-nav" style={{position: 'relative'}}>
             
@@ -103,15 +103,6 @@ export default function CreateLobby() {
             
           </div>
 
-          <div className="sidebar-btn-container" style={{marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)'}}>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="sidebar-deploy-btn"
-            >
-              DEPLOY ASSETS
-            </motion.button>
-          </div>
         </aside>
 
         {/* Content Area */}
@@ -210,8 +201,8 @@ export default function CreateLobby() {
 
       {/* Footer bar */}
       <div className="launch-stats-bar" style={{position: 'absolute', bottom: 0, width: '100%', zIndex: 30}}>
-        <div className="stats-yellow">SYSTEM TIME: WEEK 42 // BULLWHIP RATIO: 1.42 // ORDERS: +12% // QUEUE: ACTIVE</div>
-        <div>SYSTEM_STATUS &nbsp;&nbsp; ENCRYPTION_KEY &nbsp;&nbsp; LOG_OUT</div>
+        <div className="stats-yellow">GSV BEER GAME // MISSION_BRIEFING // SECURE_CHANNEL</div>
+        <div style={{cursor: 'pointer', textDecoration: 'underline'}} onClick={() => { localStorage.clear(); navigate('/login'); }}>LOG_OUT</div>
       </div>
 
     </div>

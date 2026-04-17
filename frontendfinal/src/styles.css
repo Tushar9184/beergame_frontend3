@@ -1,4 +1,4 @@
-﻿/* =========================================
+/* =========================================
    1. GLOBAL VARIABLES & RESET
    ========================================= */
 :root {
@@ -10,6 +10,35 @@
   --text: #222;
   --card-bg: #ffffff;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Global HOME back button ───────────────────────────
+   Reusable across all pages. Dark tactical style.
+   Usage: <Link to="/" className="home-back-btn">← HOME</Link>
+   ────────────────────────────────────────────────────── */
+.home-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.5rem 1.1rem;
+  transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.home-back-btn:hover {
+  color: #ebb542;
+  border-color: rgba(235,181,66,0.45);
+  box-shadow: 0 0 12px rgba(235,181,66,0.15);
 }
 
 * {

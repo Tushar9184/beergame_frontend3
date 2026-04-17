@@ -18,7 +18,9 @@ export default function RoomWaiting() {
     const [isSwitching, setIsSwitching] = useState(false);
 
     // --- Configuration ---
-    const TEST_MODE = true; // Set to false for production
+    // Set REACT_APP_TEST_MODE=true in your .env.local to use mock data during development.
+    // In production this is always false.
+    const TEST_MODE = process.env.REACT_APP_TEST_MODE === 'true';
 
     // --- Polling Logic ---
     useEffect(() => {

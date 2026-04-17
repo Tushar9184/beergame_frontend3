@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Chart from "chart.js/auto";
+import "./GameResults.css";
 
 // -------------------------- CONFIG --------------------------
 const TOTAL_WEEKS = 25;
@@ -67,7 +68,6 @@ const GameChart = ({ title, labels, datasets }) => {
 
 // -------------------------- FETCH HELPER --------------------------
 async function fetchGameHistory(gameId) {
-  console.log(`Fetching ACTUAL history for Game: ${gameId}`);
   if (!gameId) return {};
 
   const BASE_URL =
@@ -130,16 +130,19 @@ async function fetchGameHistory(gameId) {
 export default function GameResults() {
   const storedRole = localStorage.getItem("role");
   const gameId = localStorage.getItem("gameId");
-  const Role = localStorage.getItem("role");
 
   const myRoleKey = storedRole ? storedRole.toUpperCase() : "RETAILER";
-  const myRoleDisplay =
-    storedRole.charAt(0).toUpperCase() + storedRole.slice(1).toLowerCase();
+  const myRoleDisplay = storedRole
+    ? storedRole.charAt(0).toUpperCase() + storedRole.slice(1).toLowerCase()
+    : "Unknown";
 
   const [fullGameResults, setFullGameResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("summary");
-  const [activeChartKey, setActiveChartKey] = useState(myRoleDisplay);
+  const [activeChartKey, setActiveChartKey] = useState(
+    // Default to the player's own role if known, otherwise 'Retailer'
+    myRoleDisplay !== "Unknown" ? myRoleDisplay : "Retailer"
+  );
 
   useEffect(() => {
     if (!gameId) {
@@ -214,7 +217,13 @@ export default function GameResults() {
 
   // -------------------------- RENDER --------------------------
 
-  if (loading) return <h1>Loading results...</h1>;
+  if (loading)
+    return (
+      <div className="results-loading">
+        <div className="loader"></div>
+        <h2>LOADING RESULTS...</h2>
+      </div>
+    );
 
   if (!myData)
     return (
@@ -253,11 +262,11 @@ export default function GameResults() {
       {activeTab === "summary" && (
         <div className="summary-section">
           <h3>🎉 Game Completed (Week {TOTAL_WEEKS}) 🎉</h3>
-          <h3>Role : {Role}</h3>
+          <h3>Role : {myRoleDisplay}</h3>
           <h2>
             Your Total Cost:{" "}
             <span style={{ color: COLORS.Distributor }}>
-              ${myData.totalCumulativeCost.toFixed(2)}
+              ${(myData.totalCumulativeCost ?? 0).toFixed(2)}
             </span>
           </h2>
 
@@ -285,8 +294,8 @@ export default function GameResults() {
                   <td>{myData.shipmentSent[i]}</td>
                   <td>{myData.inventoryAtEndOfWeek[i]}</td>
                   <td>{myData.backOrderAtEndOfWeek[i]}</td>
-                  <td>{myData.weeklyCost[i].toFixed(2)}</td>
-                  <td>{myData.totalCost[i].toFixed(2)}</td>
+                  <td>{(myData.weeklyCost[i] ?? 0).toFixed(2)}</td>
+                  <td>{(myData.totalCost[i] ?? 0).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -327,6 +336,30 @@ export default function GameResults() {
           </div>
         </div>
       )}
+
+      {/* Navigation — users were stranded with no way back after game ends */}
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
+        <button
+          onClick={() => window.location.href = '/createlobby'}
+          style={{
+            padding: '0.75rem 1.5rem', background: '#ebb542', color: '#080c10',
+            border: 'none', borderRadius: '6px', fontWeight: '800',
+            letterSpacing: '0.06em', cursor: 'pointer', fontSize: '0.85rem'
+          }}
+        >
+          PLAY AGAIN
+        </button>
+        <button
+          onClick={() => window.location.href = '/'}
+          style={{
+            padding: '0.75rem 1.5rem', background: 'transparent', color: '#94a3b8',
+            border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px',
+            fontWeight: '700', letterSpacing: '0.06em', cursor: 'pointer', fontSize: '0.85rem'
+          }}
+        >
+          HOME
+        </button>
+      </div>
     </div>
   );
 }

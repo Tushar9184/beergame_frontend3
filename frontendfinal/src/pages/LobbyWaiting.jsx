@@ -27,7 +27,6 @@ export default function LobbyWaiting() {
   // Main connect/disconnect effect
   useEffect(() => {
     if (!roomId) {
-      alert("No room ID found");
       navigate("/createlobby");
       return;
     }
@@ -59,7 +58,7 @@ export default function LobbyWaiting() {
   // Check-for-start effect
   useEffect(() => {
     if (
-      players.length === 4 &&
+      players.length >= 1 &&
       gameStatus === "IN_PROGRESS" && // This status comes from your backend
       !countdownStarted.current
     ) {
@@ -71,10 +70,8 @@ export default function LobbyWaiting() {
         setCountdown((prev) => {
           if (prev === 1) {
             clearInterval(timer);
-            console.log("🚀 Navigating to Week 1 Order Page");
-            
-            // ✅ FIX: Navigate to /howtoplay for Week 1 order
-            navigate(`/howtoplay`); 
+            // Navigate directly to the dashboard — no fragile 2-hop via /howtoplay
+            navigate(`/dashboard/${roomId}`);
           }
           return prev - 1;
         });
@@ -98,7 +95,7 @@ export default function LobbyWaiting() {
       <div className="loader"></div>
       <h3 className="room-id">Room ID: {roomId}</h3>
       <h2 className="waiting-title">Waiting for Players...</h2>
-      <p className="waiting-text">{players.length} / 4 players connected</p>
+      <p className="waiting-text">Connected: {players.length} {players.length === 1 ? 'player' : 'players'}</p>
 
       <div className="player-list">
         {players.length === 0 ? (

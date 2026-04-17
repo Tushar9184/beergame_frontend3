@@ -45,7 +45,6 @@ function WeekTimeline({ currentWeek, festiveWeeks = [] }) {
  * The main Data component
  */
 export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
-  console.log("Data component received festiveWeeks:", festiveWeeks);
   const redDotStyle = {
     display: 'inline-block',
     height: '10px',
@@ -100,7 +99,7 @@ export default function Data({ week, cost, demand, myOrder, festiveWeeks }) {
             <span>⬇️</span>
           </div>
           <div className="data-text">
-            <p>Coustomer Demand</p>
+            <p>Customer Demand</p>
             <h2>{demand} units</h2>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getOtpFromBackend, registerUser } from "../services/user-service";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,6 +7,12 @@ import "./Auth.css";
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate('/', { replace: true });
+  }, [navigate]);
 
   const [step, setStep] = useState(1);
   const [username, setUsername] = useState("");
@@ -18,6 +24,15 @@ export default function SignUpPage() {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+    // Basic client-side validation
+    if (!username.trim() || !email.trim() || !password.trim()) {
+      alert("Please fill in all fields.");
+      return;
+    }
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
     try {
       const res = await getOtpFromBackend({ username, email, password });
       const otpFromBackend = String(res.token);
@@ -39,7 +54,7 @@ export default function SignUpPage() {
       localStorage.setItem("token", res.token);
       localStorage.setItem("username", res.username);
       localStorage.setItem("email", res.email);
-      alert("✅ Account created successfuly!");
+      alert("✅ Account created successfully!");
       navigate("/");
     } catch (err) {
       const errorMessage = err.response?.data?.message || "❌ Registration failed";
@@ -199,10 +214,10 @@ export default function SignUpPage() {
           LAT: 52.3676° N // LON: 4.9041° E // SYS_READY
         </div>
         <div className="footer-center footer-yellow">
-          SYSTEM TIME: WEEK 42 // BULLWHIP RATIO: 1.42 // ORDERS: +12% // QUEUE: ACTIVE
+          GSV BEER GAME // OPERATOR_ENROLLMENT // SECURE_CHANNEL
         </div>
         <div className="footer-right">
-          SYSTEM_STATUS &nbsp;&nbsp; ENCRYPTION_KEY &nbsp;&nbsp; LOG_OUT
+          SYSTEM_READY
         </div>
       </div>
     </div>

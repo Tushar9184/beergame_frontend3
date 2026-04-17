@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from "../services/user-service";
 import { motion } from "framer-motion";
@@ -10,6 +10,12 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  // Redirect if already logged in — no need to show login form to authenticated users
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate('/', { replace: true });
+  }, [navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -18,7 +24,6 @@ export default function LoginPage() {
       localStorage.setItem("username", data.username);
       navigate('/');
     } catch (err) {
-      console.log(err);
       const errorMessage = err.response?.data?.message || "Invalid username or password";
       alert(errorMessage);
     }
@@ -105,10 +110,10 @@ export default function LoginPage() {
           LAT: 52.3676° N // LON: 4.9041° E // SYS_READY
         </div>
         <div className="footer-center footer-yellow">
-          SYSTEM TIME: WEEK 42 // BULLWHIP RATIO: 1.42 // ORDERS: +12% // QUEUE: ACTIVE
+          GSV BEER GAME // OPERATOR_LOGIN // SECURE_CHANNEL
         </div>
         <div className="footer-right">
-          SYSTEM_STATUS &nbsp;&nbsp; ENCRYPTION_KEY &nbsp;&nbsp; LOG_OUT
+          SYSTEM_READY
         </div>
       </div>
     </div>

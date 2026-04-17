@@ -8,9 +8,9 @@ const ROLES = ['Manufacturer', 'Wholesaler', 'Distributor', 'Retailer'];
 const CreateRoom = () => {
     const navigate = useNavigate();
     
-    // Host Details
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
+    // Pre-fill from localStorage — user is already authenticated, no need to retype
+    const [username, setUsername] = useState(localStorage.getItem("username") || '');
+    const [email, setEmail] = useState(localStorage.getItem("email") || '');
     
     // Team Details (Host's Seat)
     const [teamName, setTeamName] = useState('');
@@ -42,7 +42,8 @@ const CreateRoom = () => {
             
         } catch (error) {
             console.error(error);
-            alert("Error creating room. Check console.");
+            const msg = error?.response?.data?.message || "Unable to create room. Please try again.";
+            alert(msg);
         } finally {
             setIsLoading(false);
         }

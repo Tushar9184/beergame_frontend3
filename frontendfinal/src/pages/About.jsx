@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../Components/Navbar";
 import { Lightbulb, Users, Gamepad2, TrendingUp, Anchor, Zap } from "lucide-react";
 import "./About.css";
 
@@ -36,13 +37,17 @@ export default function About() {
       {/* Background overlays matching Landing Page */}
       <div className="about-grid-overlay" />
       <div className="about-radial-overlay" />
+      <Navbar />
 
       <div className="about-page-content">
 
         {/* ── HERO ─────────────────────────────── */}
         <section className="about-hero-section">
-          <div className="about-eyebrow fade-in-up">
-            TACTICAL BRIEFING // MODULE_ALPHA
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <div className="about-eyebrow">
+              INTELLIGENCE BRIEFING // OMEGA-7
+            </div>
+            <Link to="/" className="home-back-btn">← HOME</Link>
           </div>
 
           <h1 className="about-hero-title fade-in-up delay-1">
@@ -144,7 +149,7 @@ export default function About() {
                 INITIATE SYNC
               </Link>
               <Link to="/login" className="about-btn about-btn-secondary">
-                ACCESS REGISTRY
+              ACCESS SYSTEM
               </Link>
             </div>
           </div>

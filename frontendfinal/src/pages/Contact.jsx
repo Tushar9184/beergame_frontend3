@@ -1,205 +1,234 @@
 import React, { useState } from "react";
-import { 
-  Mail, 
-  MapPin, 
-  Phone, 
-  Send, 
-  MessageSquare, 
-  Github, 
-  Linkedin, 
+import { Link } from "react-router-dom";
+import {
+  Mail,
+  MapPin,
+  Phone,
+  Send,
+  Github,
+  Linkedin,
   Twitter,
-  HelpCircle
-} from "lucide-react"; 
-import "../styles.css";
+} from "lucide-react";
+import Navbar from "../Components/Navbar";
+import "./Contact.css";
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Handle Input Change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Simulate Sending Data
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      alert("Please fill in all fields before sending.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     setIsSubmitting(true);
-    
-    // Fake API delay
+
+    // Fake API delay (replace with real EmailJS / Formspree call when ready)
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitted(true);
       setFormData({ name: "", email: "", message: "" });
-      
-      // Reset success message after 3 seconds
       setTimeout(() => setSubmitted(false), 5000);
     }, 1500);
   };
 
   return (
-    <div className="contact-wrapper">
-      
-      {/* --- HERO SECTION --- */}
-      <section className="contact-hero">
-        <div className="hero-badge"><MessageSquare size={16} /> Support Center</div>
-        <h1>Get in <span className="text-gradient">Touch</span></h1>
-        <p>
-          Have questions about the simulation? Found a bug? Or just want to talk supply chain strategy? 
-          We are here to help.
-        </p>
-      </section>
+    <div className="contact-tactical-wrapper">
+      {/* Background overlays — same as Landing / About */}
+      <div className="contact-grid-overlay" />
+      <div className="contact-radial-overlay" />
+      <Navbar />
 
-      {/* --- MAIN CONTENT GRID --- */}
-      <div className="contact-container">
-        
-        {/* LEFT COLUMN: Contact Info */}
-        <div className="contact-info fade-in-up">
-          <h2>Contact Information</h2>
-          <p className="info-sub">
-            Fill out the form and our team will get back to you within 24 hours.
+      <div className="contact-page-content">
+
+        {/* ── HERO ─────────────────────────────── */}
+        <section className="contact-hero-section">
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <div className="contact-eyebrow">
+              SUPPORT CENTER // COMMS_CHANNEL
+            </div>
+            <Link to="/" className="home-back-btn">← HOME</Link>
+          </div>
+          <h1 className="contact-hero-title">
+            <span className="gold-text">ESTABLISH</span><br />
+            CONTACT
+          </h1>
+          <p className="contact-hero-subtitle">
+            Have questions about the simulation? Found a bug? Or just want to talk
+            supply chain strategy? Open a transmission and we'll respond within 24 hours.
           </p>
+        </section>
 
-          <div className="info-cards">
-            <div className="info-card">
-              <div className="icon-circle"><Mail size={24} /></div>
-              <div>
-                <h3>Email Us</h3>
-                <p>support@beergame.com</p>
+        {/* ── MAIN GRID: Info + Form ─────────── */}
+        <div className="contact-grid">
+
+          {/* LEFT COLUMN — Info */}
+          <div className="contact-info-panel c-fade-up">
+            <div>
+              <div className="contact-section-label">// OPERATOR_CHANNELS</div>
+              <h2>Contact<br />Information</h2>
+              <p className="sub-text">
+                Reach out through any channel below. Our team monitors all transmissions.
+              </p>
+            </div>
+
+            <div className="contact-info-cards">
+              <div className="contact-info-card">
+                <div className="contact-info-icon"><Mail size={20} /></div>
+                <div>
+                  <h4>Email Channel</h4>
+                  <p>support@beergame.com</p>
+                </div>
+              </div>
+
+              <div className="contact-info-card">
+                <div className="contact-info-icon"><Phone size={20} /></div>
+                <div>
+                  <h4>Voice Channel</h4>
+                  <p>+1 (555) 123-4567</p>
+                </div>
+              </div>
+
+              <div className="contact-info-card">
+                <div className="contact-info-icon"><MapPin size={20} /></div>
+                <div>
+                  <h4>Field Office</h4>
+                  <p>123 Supply Chain Blvd,<br />Logistics City, LC 90210</p>
+                </div>
               </div>
             </div>
 
-            <div className="info-card">
-              <div className="icon-circle"><Phone size={24} /></div>
-              <div>
-                <h3>Call Us</h3>
-                <p>+1 (555) 123-4567</p>
-              </div>
-            </div>
-
-            <div className="info-card">
-              <div className="icon-circle"><MapPin size={24} /></div>
-              <div>
-                <h3>Visit Us</h3>
-                <p>123 Supply Chain Blvd,<br />Logistics City, LC 90210</p>
+            <div className="contact-social-block">
+              <h4>// External Networks</h4>
+              <div className="contact-social-icons">
+                <a
+                  href="https://github.com/Tushar9184"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-social-btn"
+                  aria-label="GitHub"
+                >
+                  <Github size={20} />
+                </a>
+                <a
+                  href="https://linkedin.com/in/gsv-beer-game"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-social-btn"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin size={20} />
+                </a>
+                <a
+                  href="https://twitter.com/gsvbeergame"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-social-btn"
+                  aria-label="Twitter"
+                >
+                  <Twitter size={20} />
+                </a>
               </div>
             </div>
           </div>
 
-          <div className="social-links">
-            <h3>Follow Us</h3>
-            <div className="social-icons">
-              {/* FIXED: Replaced '#' with valid URLs and added rel/target */}
-              <a 
-                href="https://github.com" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="social-btn"
-                aria-label="GitHub"
+          {/* RIGHT COLUMN — Form */}
+          <div className="contact-form-panel c-fade-up c-delay-1">
+            <h2>Transmit Message</h2>
+            <form className="contact-form" onSubmit={handleSubmit}>
+              <div className="contact-field">
+                <label>Operator Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  required
+                />
+              </div>
+
+              <div className="contact-field">
+                <label>Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your@email.com"
+                  required
+                />
+              </div>
+
+              <div className="contact-field">
+                <label>Message</label>
+                <textarea
+                  name="message"
+                  rows="6"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Describe your query..."
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className={`contact-submit-btn ${submitted ? "sent" : ""}`}
+                disabled={isSubmitting}
               >
-                <Github size={20} />
-              </a>
-              <a 
-                href="https://linkedin.com" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="social-btn"
-                aria-label="LinkedIn"
-              >
-                <Linkedin size={20} />
-              </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="social-btn"
-                aria-label="Twitter"
-              >
-                <Twitter size={20} />
-              </a>
-            </div>
+                {isSubmitting
+                  ? "TRANSMITTING..."
+                  : submitted
+                  ? "✔ MESSAGE RECEIVED"
+                  : <><Send size={16} /> TRANSMIT MESSAGE</>
+                }
+              </button>
+            </form>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: The Form */}
-        <div className="contact-form-wrapper fade-in-up delay-1">
-          <form className="modern-form" onSubmit={handleSubmit}>
-            <h2>Send a Message</h2>
-            
-            <div className="input-group">
-              <label>Your Name</label>
-              <input 
-                type="text" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleChange} 
-                placeholder="John Doe" 
-                required 
-              />
-            </div>
+        {/* ── FAQ SECTION ────────────────────── */}
+        <section className="contact-faq-section">
+          <div className="contact-faq-header">
+            <h2>Frequent Queries</h2>
+            <p>// MISSION_INTEL — Quick answers about the Beer Distribution Game</p>
+          </div>
 
-            <div className="input-group">
-              <label>Email Address</label>
-              <input 
-                type="email" 
-                name="email" 
-                value={formData.email} 
-                onChange={handleChange} 
-                placeholder="john@example.com" 
-                required 
-              />
+          <div className="contact-faq-grid">
+            <div className="contact-faq-card">
+              <h3>Is this game free to play?</h3>
+              <p>Yes. You can create lobbies and join rooms completely free. No credit card required.</p>
             </div>
-
-            <div className="input-group">
-              <label>Message</label>
-              <textarea 
-                name="message" 
-                rows="5" 
-                value={formData.message} 
-                onChange={handleChange} 
-                placeholder="How can we help you?" 
-                required 
-              ></textarea>
+            <div className="contact-faq-card">
+              <h3>How many players do I need?</h3>
+              <p>Ideally 4 players per supply chain (Retailer, Wholesaler, Distributor, Manufacturer), but smaller teams are supported.</p>
             </div>
+            <div className="contact-faq-card">
+              <h3>Can I customize game settings?</h3>
+              <p>Hosts can adjust lead times, backlog costs, and inventory holding costs in the lobby settings panel.</p>
+            </div>
+            <div className="contact-faq-card">
+              <h3>Do I need an account?</h3>
+              <p>Yes. Registration is required to track your stats, save game history, and access the full simulation suite.</p>
+            </div>
+          </div>
+        </section>
 
-            <button type="submit" className={`submit-btn ${isSubmitting ? "loading" : ""} ${submitted ? "success" : ""}`} disabled={isSubmitting}>
-              {isSubmitting ? "Sending..." : submitted ? "Message Sent!" : (
-                <>Send Message <Send size={18} /></>
-              )}
-            </button>
-          </form>
-        </div>
       </div>
-
-      {/* --- FAQ SECTION --- */}
-      <section className="faq-section">
-        <div className="faq-header">
-          <HelpCircle size={40} className="faq-icon" />
-          <h2>Frequently Asked Questions</h2>
-          <p>Quick answers to common questions about the Beer Game.</p>
-        </div>
-
-        <div className="faq-grid">
-          <div className="faq-item">
-            <h3>Is this game free to play?</h3>
-            <p>Yes! You can create rooms and join lobbies completely for free.</p>
-          </div>
-          <div className="faq-item">
-            <h3>How many players do I need?</h3>
-            <p>Ideally 4 players per supply chain (Retailer, Wholesaler, Distributor, Manufacturer), but you can play with fewer using AI fills.</p>
-          </div>
-          <div className="faq-item">
-            <h3>Can I customize the settings?</h3>
-            <p>Hosts can adjust lead times, backlog costs, and inventory holding costs in the lobby settings.</p>
-          </div>
-          <div className="faq-item">
-            <h3>Do I need an account?</h3>
-            <p>Yes, you need to sign up to track your stats and save your game history.</p>
-          </div>
-        </div>
-      </section>
-
     </div>
   );
 }

@@ -35,13 +35,12 @@ export default function Dashboard() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      console.error("❌ No token, redirecting to login...");
       navigate("/login");
       return;
     }
 
     if (!roomId) {
-      alert("Room not found. Please create or join a lobby first!");
+      // No room found — silently navigate away, no blocking alert()
       navigate("/createlobby");
       return;
     }
@@ -63,8 +62,6 @@ export default function Dashboard() {
   const { currentWeek, players, festiveWeeks, gameStatus } = gameState; 
 
   // --- Game End Redirection Logic ---
-  // --- Game End Redirection Logic ---
-// --- Game End Redirection Logic ---
   useEffect(() => {
     if (gameStatus === 'FINISHED') {
       
@@ -142,7 +139,7 @@ export default function Dashboard() {
             <ul className="player-status-list">
               {(players || []).map((player) => (
                 <li
-                  key={player.id}
+                  key={player.id ?? player.role ?? player.userName}
                   className={player.isReadyForNextTurn ? "ready" : ""}
                 >
                   <span>{player.isReadyForNextTurn ? "✅" : "⏳"}</span>
@@ -155,7 +152,7 @@ export default function Dashboard() {
           <Card role={role} roomId={roomId} gameState={gameState} />
         )}
       </div>
-        <HowToPlay/>
+        <HowToPlay embedded={true} />
     </div>
   );
 }

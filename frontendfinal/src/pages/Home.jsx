@@ -5,6 +5,8 @@ import "./LandingPage.css"; // Reuse the dark tactical styling
 
 export default function Home() {
     const [time, setTime] = useState("");
+    // Read real username from localStorage so the metric shows actual data
+    const username = localStorage.getItem("username") || "UNKNOWN";
 
     useEffect(() => {
         const updateTime = () => {
@@ -43,23 +45,28 @@ export default function Home() {
                         </p>
                         
                         <div className="landing-button-group">
-                            <Link to="/dashboard/default" className="landing-btn landing-btn-primary">INITIATE PROTOCOL</Link>
-                            <Link to="/about" className="landing-btn landing-btn-secondary">REGISTRY</Link>
+                            <Link to="/createlobby" className="landing-btn landing-btn-primary">INITIATE PROTOCOL</Link>
+                            <Link to="/learn" className="landing-btn landing-btn-secondary">LEARN MORE</Link>
                         </div>
                         
                         <div className="landing-metrics-grid">
+                            {/* SESSION — real: always active if user is on this page */}
                             <div className="landing-metric">
-                                <div className="metric-label">LATENCY</div>
-                                <div className="metric-value">14ms</div>
+                                <div className="metric-label">SESSION</div>
+                                <div className="metric-value">ACTIVE</div>
                             </div>
+                            {/* OPERATOR — real: shows the logged-in username */}
                             <div className="landing-metric">
-                                <div className="metric-label">ENCRYPTION</div>
-                                <div className="metric-value">AES-256</div>
+                                <div className="metric-label">OPERATOR</div>
+                                <div className="metric-value" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    {username}
+                                </div>
                             </div>
+                            {/* STATUS — consistent with LandingPage (was SECURE, now ONLINE) */}
                             <div className="landing-metric">
                                 <div className="metric-label">STATUS</div>
                                 <div className="metric-value status-online">
-                                    <span className="status-dot"></span> SECURE
+                                    <span className="status-dot"></span> ONLINE
                                 </div>
                             </div>
                         </div>
@@ -144,7 +151,7 @@ export default function Home() {
                         <p>Join the ranks of top logistics professionals and test your skills in the most realistic beer game simulation on the market.</p>
                         <div className="landing-button-group center-btn">
                             <Link to="/joinlobby" className="landing-btn landing-btn-primary">INITIATE SYNC</Link>
-                            <Link to="/about" className="landing-btn landing-btn-secondary">REQUEST INTEL</Link>
+                            <Link to="/about" className="landing-btn landing-btn-secondary">LEARN MORE</Link>
                         </div>
                     </div>
                 </div>
