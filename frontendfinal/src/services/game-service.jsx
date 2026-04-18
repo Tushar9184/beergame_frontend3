@@ -32,3 +32,16 @@ export const startGame = async () => {
     throw err;
   }
 };
+
+export const addBot = async (roomId, role, botType) => {
+  try {
+    const res = await myAxios.post(`/game/${roomId}/addBot`, {
+      role,
+      botType,
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to add bot:", err);
+    throw err;
+  }
+};

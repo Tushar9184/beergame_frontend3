@@ -8,6 +8,44 @@ import HowToPlay from "../Components/dashboard/Footer.jsx";
 import { connectSocket, disconnectSocket } from "../services/socket";
 import "./DashBoard.css";
 
+function TurnTimer({ currentWeek }) {
+  const [timeLeft, setTimeLeft] = useState(40);
+
+  useEffect(() => {
+    setTimeLeft(40);
+  }, [currentWeek]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timerObj = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timerObj);
+  }, [timeLeft]);
+
+  return (
+    <div style={{
+      textAlign: 'center',
+      margin: '10px auto',
+      padding: '10px',
+      border: '1px solid #ebb542',
+      borderRadius: '5px',
+      background: 'rgba(0,0,0,0.5)',
+      maxWidth: '400px'
+    }}>
+      <h3 style={{ margin: 0, color: timeLeft > 10 ? '#00e5ff' : '#ff4444' }}>
+        Turn Time Left: {timeLeft}s
+      </h3>
+      {timeLeft === 0 && (
+        <p style={{ color: '#ff4444', margin: '5px 0 0 0', fontSize: '0.9rem' }}>
+          AFK Timeout! Bot is taking your turn...
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -59,12 +97,12 @@ export default function Dashboard() {
   }, [roomId, navigate]);
 
   // --- Extract data ---
-  const { currentWeek, players, festiveWeeks, gameStatus } = gameState; 
+  const { currentWeek, players, festiveWeeks, gameStatus } = gameState;
 
   // --- Game End Redirection Logic ---
   useEffect(() => {
     if (gameStatus === 'FINISHED') {
-      
+
       // 1. Find 'me' in the players list
       const myRole = localStorage.getItem("role");
       const me = players.find((p) => p.role?.toUpperCase() === myRole?.toUpperCase());
@@ -75,13 +113,13 @@ export default function Dashboard() {
       const correctGameId = me?.gameId || gameState.gameId;
 
       if (correctGameId) {
-          console.log("✅ Saving Correct Game ID:", correctGameId);
-          localStorage.setItem("gameId", correctGameId);
-          
-          console.log("Game finished. Redirecting to results page.");
-          navigate('/gameresult', { replace: true }); 
+        console.log("✅ Saving Correct Game ID:", correctGameId);
+        localStorage.setItem("gameId", correctGameId);
+
+        console.log("Game finished. Redirecting to results page.");
+        navigate('/gameresult', { replace: true });
       } else {
-          console.error("❌ CRITICAL: Could not find Game ID in player object or game state");
+        console.error("❌ CRITICAL: Could not find Game ID in player object or game state");
       }
     }
   }, [gameStatus, navigate, players, gameState]);
@@ -97,19 +135,19 @@ export default function Dashboard() {
   const formattedCost = (me?.weeklyCost ?? 0).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-});
+  });
 
   // Prevent rendering dashboard content if the game is already finished
   if (gameStatus === 'FINISHED') {
-      return (
-          <div className="dashboard-container">
-              <Header />
-              <div className="waiting-box">
-                  <div className="loader"></div>
-                  <h2>Game Finished. Loading Results...</h2>
-              </div>
-          </div>
-      );
+    return (
+      <div className="dashboard-container">
+        <Header />
+        <div className="waiting-box">
+          <div className="loader"></div>
+          <h2>Game Finished. Loading Results...</h2>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -125,7 +163,11 @@ export default function Dashboard() {
           festiveWeeks={festiveWeeks || []}
         />
       </div>
-      
+
+      <div className="fade-in fade-in-delay-1">
+        <TurnTimer currentWeek={currentWeek} />
+      </div>
+
       <div className="fade-in fade-in-delay-2">
         <FlowBox />
       </div>
@@ -152,7 +194,7 @@ export default function Dashboard() {
           <Card role={role} roomId={roomId} gameState={gameState} />
         )}
       </div>
-        <HowToPlay embedded={true} />
+      <HowToPlay embedded={true} />
     </div>
   );
 }
