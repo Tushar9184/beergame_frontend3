@@ -35,7 +35,7 @@ export const startGame = async () => {
 
 export const addBot = async (roomId, role, botType) => {
   try {
-    const res = await myAxios.post(`/game/${roomId}/addBot`, {
+    const res = await myAxios.post(`/api/game/${roomId}/addBot`, {
       role,
       botType,
     });
