@@ -36,6 +36,7 @@ export default function SignUpPage() {
     try {
       const res = await getOtpFromBackend({ username, email, password });
       const otpFromBackend = String(res.token);
+      console.log(otpFromBackend)
       setBackendOtp(otpFromBackend);
       alert("✅ OTP sent to your email!");
       setStep(2);
@@ -65,9 +66,9 @@ export default function SignUpPage() {
   return (
     <div className="auth-page-wrapper">
       <div className="auth-bg-overlay"></div>
-      
+
       <div className="auth-content">
-        <motion.div 
+        <motion.div
           className="auth-hero"
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -76,13 +77,13 @@ export default function SignUpPage() {
           <div className="hero-subtitle">DEPLOYMENT SELECTION</div>
           <h1 className="hero-title-main">CHOOSE<br />YOUR<br />SECTOR.</h1>
           <h2 className="hero-title-ghost">DISTRIBUTOR.<br />MANUFACTURER.</h2>
-          
+
           <div className="hero-quote">
             THE BULLWHIP EFFECT IS REAL. EVERY DECISION IN THE CHAIN IMPACTS GLOBAL STABILITY. RECRUITMENT IS OPEN.
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="auth-form-section"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,9 +99,9 @@ export default function SignUpPage() {
 
             <AnimatePresence mode="wait">
               {step === 1 && (
-                <motion.form 
+                <motion.form
                   key="step1"
-                  className="auth-form" 
+                  className="auth-form"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -109,47 +110,47 @@ export default function SignUpPage() {
                 >
                   <div className="auth-input-group">
                     <label className="auth-label" htmlFor="signup-username">IDENTIFICATION_NAME</label>
-                    <input 
+                    <input
                       className="auth-input"
                       id="signup-username"
-                      type="text" 
+                      type="text"
                       value={username}
-                      onChange={(e)=>setUsername(e.target.value)}
-                      placeholder="COMMANDER NAME" 
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="COMMANDER NAME"
                       required
                     />
                   </div>
 
                   <div className="auth-input-group">
                     <label className="auth-label" htmlFor="signup-email">COMMS_CHANNEL_EMAIL</label>
-                    <input 
+                    <input
                       className="auth-input"
                       id="signup-email"
-                      type="email" 
+                      type="email"
                       value={email}
-                      onChange={(e)=>setEmail(e.target.value)}
-                      placeholder="SECURE_ADDRESS@SYSTEM.COM" 
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="SECURE_ADDRESS@SYSTEM.COM"
                       required
                     />
                   </div>
 
                   <div className="auth-input-group">
                     <label className="auth-label" htmlFor="signup-password">PASS_KEY</label>
-                    <input 
+                    <input
                       className="auth-input"
                       id="signup-password"
-                      type="password" 
+                      type="password"
                       value={password}
-                      onChange={(e)=>setPassword(e.target.value)}
-                      placeholder="••••••••" 
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
                       required
                     />
                   </div>
 
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="auth-submit-btn" 
+                    className="auth-submit-btn"
                     type="submit"
                   >
                     CONTINUE
@@ -162,45 +163,45 @@ export default function SignUpPage() {
               )}
 
               {step === 2 && (
-                <motion.form 
+                <motion.form
                   key="step2"
-                  className="auth-form" 
+                  className="auth-form"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
                   onSubmit={handleRegister}
                 >
-                   <p style={{color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1rem', fontFamily: 'monospace'}}>
-                     TRANSMITTING VERIFICATION KEY TO: {email}
-                   </p>
-                   
+                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1rem', fontFamily: 'monospace' }}>
+                    TRANSMITTING VERIFICATION KEY TO: {email}
+                  </p>
+
                   <div className="auth-input-group">
                     <label className="auth-label" htmlFor="otp-input">AUTHORIZATION_CODE</label>
-                    <input 
+                    <input
                       className="auth-input"
                       id="otp-input"
                       type="text"
                       maxLength="6"
-                      style={{letterSpacing: '8px', fontFamily: 'monospace', fontSize: '1.2rem'}}
+                      style={{ letterSpacing: '8px', fontFamily: 'monospace', fontSize: '1.2rem' }}
                       value={enteredOtp}
-                      onChange={(e)=>setEnteredOtp(e.target.value)}
-                      placeholder="• • • • • •" 
+                      onChange={(e) => setEnteredOtp(e.target.value)}
+                      placeholder="• • • • • •"
                       required
                     />
                   </div>
 
-                  <motion.button 
+                  <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="auth-submit-btn" 
+                    className="auth-submit-btn"
                     type="submit"
                   >
                     CREATE ACCOUNT
                   </motion.button>
-                  
+
                   <div className="auth-links">
-                    INCORRECT COMMS CHANNEL? <span className="auth-link" style={{cursor:'pointer'}} onClick={() => setStep(1)}>ABORT & RETRY</span>
+                    INCORRECT COMMS CHANNEL? <span className="auth-link" style={{ cursor: 'pointer' }} onClick={() => setStep(1)}>ABORT & RETRY</span>
                   </div>
                 </motion.form>
               )}
