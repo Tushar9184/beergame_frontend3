@@ -130,6 +130,15 @@ export default function RoomWaiting() {
         }
     }, [addLog, currentUser, navigate, roomId]);
 
+    // ── Check if the room was already running when we joined ──────────────────
+    useEffect(() => {
+        const initialData = location.state?.initialRoomData;
+        if (initialData && (initialData.roomStatus === 'RUNNING' || initialData.status === 'RUNNING')) {
+            addLog('SYSTEM: Launch sequence initiated. Redirecting...');
+            setTimeout(() => navigate(`/dashboard/${roomId}`), 1500);
+        }
+    }, [location.state, navigate, roomId, addLog]);
+
     // ── WebSocket only (GET /api/room/{id} does not exist on backend) ─────────
     useEffect(() => {
         let isMounted = true;
