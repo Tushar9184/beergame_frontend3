@@ -242,36 +242,44 @@ export function disconnectRoomSocket() {
   roomOnRoomResult  = (result) => { console.log("WS (Room): unhandled room result", result); };
 }
 
-export function sendOrderWS({ roomId, quantity }) {
-  if (!stompClient || !stompClient.connected) {
-    console.warn("WS not connected — can't send order");
+/** Returns the first connected STOMP client or null. */
+function getConnectedClient() {
+  if (stompClient && stompClient.connected) return stompClient;
+  if (roomStompClient && roomStompClient.connected) return roomStompClient;
+  return null;
+}
+
+/**
+ * Publishes an order to the given destination.
+ * Retries up to 5 times with 500ms delay if no client is connected yet.
+ * This fixes the race condition where the HTTP game-state seed loads instantly
+ * but the WebSocket handshake is still in progress.
+ */
+function publishWithRetry(destination, body, attempt = 0) {
+  const client = getConnectedClient();
+  if (client) {
+    client.publish({
+      destination,
+      body: JSON.stringify(body),
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    console.log("📤 Published to", destination, body);
     return;
   }
 
-  stompClient.publish({
-    destination: `/app/game/${roomId}/placeOrder`,
-    body: JSON.stringify({ orderAmount: Number(quantity) }),
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
+  if (attempt >= 5) {
+    console.error("❌ WS: Could not send after 5 retries —", destination);
+    return;
+  }
 
-  console.log("📤 Sent order:", quantity);
+  console.warn(`⏳ WS not connected yet, retrying (${attempt + 1}/5)...`);
+  setTimeout(() => publishWithRetry(destination, body, attempt + 1), 500);
+}
+
+export function sendOrderWS({ roomId, quantity }) {
+  publishWithRetry(`/app/game/${roomId}/placeOrder`, { orderAmount: Number(quantity) });
 }
 
 export function sendRoomOrderWS({ roomId, quantity }) {
-  if (!stompClient || !stompClient.connected) {
-    console.warn("WS not connected — can't send room order");
-    return;
-  }
-
-  stompClient.publish({
-    destination: `/app/room/${roomId}/placeOrder`,
-    body: JSON.stringify({ orderAmount: Number(quantity) }),
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-
-  console.log("📤 Sent room order:", quantity);
+  publishWithRetry(`/app/room/${roomId}/placeOrder`, { orderAmount: Number(quantity) });
 }

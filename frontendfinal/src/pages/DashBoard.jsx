@@ -225,25 +225,37 @@ export default function Dashboard() {
         <FlowBox />
       </div>
 
-      <div className="fade-in fade-in-delay-3">
+      <div className="fade-in fade-in-delay-3" style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
         {iAmReady ? (
-          <div className="waiting-box">
+          <div className="waiting-box" style={{ width: '100%', maxWidth: '500px' }}>
             <div className="loader"></div>
-            <h2>Waiting for other players...</h2>
-            <ul className="player-status-list">
-              {players.map((player) => (
-                <li
-                  key={String(player.id ?? player.role ?? player.userName)}
-                  className={(player.readyForNextTurn ?? player.isReadyForNextTurn) ? "ready" : ""}
-                >
-                  <span>{(player.readyForNextTurn ?? player.isReadyForNextTurn) ? "✅" : "⏳"}</span>
-                  {player.userName}
-                </li>
-              ))}
-            </ul>
+            <h2 style={{ textAlign: 'center' }}>Waiting for other players...</h2>
           </div>
         ) : (
           <Card role={role} roomId={roomId} gameState={gameState} />
+        )}
+        
+        {/* ALWAYS show the wait list so players know who we are waiting on! */}
+        {players.length > 0 && (
+          <div className="waiting-box" style={{ minHeight: 'auto', padding: '1.5rem', width: '100%', maxWidth: '500px' }}>
+            <h3 style={{ marginTop: 0, textAlign: 'center', color: '#ebb542', fontSize: '1.1rem', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              Turn Status (Week {currentWeek})
+            </h3>
+            <ul className="player-status-list" style={{ marginTop: '1rem' }}>
+              {players.map((player) => {
+                const isPlayerReady = player.readyForNextTurn ?? player.isReadyForNextTurn ?? false;
+                return (
+                  <li
+                    key={String(player.id ?? player.role ?? player.userName)}
+                    className={isPlayerReady ? "ready" : ""}
+                  >
+                    <span>{isPlayerReady ? "✅" : "⏳"}</span>
+                    {player.userName}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
       </div>
 
