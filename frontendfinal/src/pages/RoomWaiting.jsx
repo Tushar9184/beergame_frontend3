@@ -10,9 +10,12 @@ const REQUIRED_PLAYERS = 16;
 /**
  * Parse ANY backend response shape into a uniform
  * { slots: { "ROLE_TEAMNAME": "username" }, teams: Set<string> } object.
- * Handles:
- *   - RoomStateDTO  → newState.players  (flat list with teamName / role / userName)
- *   - GameRoom JSON → newState.teams    (nested list of team objects with .players)
+ *
+ * PlayerAssignmentDTO exact fields (from Java backend):
+ *   - username        (the player's login name)
+ *   - initialTeamName (the team name string)
+ *   - assignedRole    (RoleType enum → serialized as "RETAILER", "MANUFACTURER" etc.)
+ *   - gameId, isReady
  */
 function parseRoomState(newState) {
     const slots = {};
@@ -20,29 +23,32 @@ function parseRoomState(newState) {
 
     if (!newState) return { slots, teams };
 
-    // ── Scenario A: flat players list (RoomStateDTO) ─────────────────────────
+    // ── Scenario A: flat players list (RoomStateDTO with PlayerAssignmentDTO[]) ──
     if (newState.players && newState.players.length > 0) {
         newState.players.forEach(p => {
-            const role = (p.role || p.roleType || p.assignedRole || '').toUpperCase();
-            const team = (p.teamName || p.initialTeamName || p.team || '').toUpperCase().trim();
+            // EXACT DTO field: assignedRole (Players.RoleType enum as string)
+            const role = (p.assignedRole || p.role || '').toUpperCase();
+            // EXACT DTO field: initialTeamName
+            const team = (p.initialTeamName || p.teamName || '').toUpperCase().trim();
             if (!role || !team) return;
             const key = `${role}_${team}`;
-            slots[key] = p.userName || p.username || '?';
+            // EXACT DTO field: username (lowercase u)
+            slots[key] = p.username || p.userName || '?';
             teams.add(team);
         });
     }
 
-    // ── Scenario B: nested teams list (GameRoom entity) ───────────────────────
+    // ── Scenario B: nested teams list (GameRoom entity / WebSocket payload) ───
     if (newState.teams && newState.teams.length > 0) {
         newState.teams.forEach(t => {
             const team = (t.teamName || t.name || '').toUpperCase().trim();
             if (!team) return;
             teams.add(team);
             (t.players || []).forEach(p => {
-                const role = (p.role || p.roleType || '').toUpperCase();
+                const role = (p.assignedRole || p.role || p.roleType || '').toUpperCase();
                 if (!role) return;
                 const key = `${role}_${team}`;
-                slots[key] = p.userName || p.username || '?';
+                slots[key] = p.username || p.userName || '?';
             });
         });
     }
