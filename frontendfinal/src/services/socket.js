@@ -2,9 +2,15 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
+// ── Game Socket (for GameStateDTO) ─────────────────────────────────────────
 let stompClient = null;
 let activeRoomId = null;
 let currentSubscription = null;
+
+// ── Room Socket (for RoomStateDTO + RoomResultDTO) — completely separate ───
+let roomStompClient = null;
+let activeRoomSocketId = null;
+let roomSubscriptions = [];
 
 // ✅ FIX 1: Create a variable to hold the CURRENT callback function.
 // This lets us change the callback without reconnecting.
@@ -125,9 +131,8 @@ export function disconnectSocket() {
   };
 }
 
-let currentOnRoomResult = (result) => {
-  console.log("WS: unhandled room result", result);
-};
+let roomOnStateUpdate = (state) => { console.warn("WS (Room): onStateUpdate not set", state); };
+let roomOnRoomResult  = (result) => { console.log("WS (Room): unhandled room result", result); };
 
 export function connectRoomSocket({ roomId, onStateUpdate, onRoomResult }) {
   if (!roomId) {
@@ -145,102 +150,96 @@ export function connectRoomSocket({ roomId, onStateUpdate, onRoomResult }) {
     process.env.REACT_APP_API_BASE ||
     "https://the-beer-game-backend.onrender.com";
 
-  currentOnStateUpdate = onStateUpdate;
-  if (onRoomResult) currentOnRoomResult = onRoomResult;
+  // Update callbacks every call — separate from game socket
+  if (onStateUpdate) roomOnStateUpdate = onStateUpdate;
+  if (onRoomResult)  roomOnRoomResult  = onRoomResult;
 
-  if (stompClient && stompClient.connected && activeRoomId === roomId) {
-    console.log("WS (Room) already active, callback updated for:", roomId);
+  // Already connected to this room — just update callbacks, no reconnect needed
+  if (roomStompClient && roomStompClient.connected && activeRoomSocketId === roomId) {
+    console.log("WS (Room) already active, callbacks updated for:", roomId);
     return;
   }
 
+  // Clean up old room socket
   try {
-    if (currentSubscription) {
-      if (Array.isArray(currentSubscription)) {
-        currentSubscription.forEach((s) => s.unsubscribe());
-      } else {
-        currentSubscription.unsubscribe();
-      }
-      currentSubscription = null;
-    }
-    if (stompClient) {
-      stompClient.deactivate();
-    }
+    roomSubscriptions.forEach((s) => { try { s.unsubscribe(); } catch {} });
+    roomSubscriptions = [];
+    if (roomStompClient) roomStompClient.deactivate();
   } catch (err) {
-    console.warn("WS cleanup error:", err);
+    console.warn("WS (Room) cleanup error:", err);
   }
 
-  stompClient = null;
-  activeRoomId = roomId;
+  roomStompClient = null;
+  activeRoomSocketId = roomId;
 
-  stompClient = new Client({
+  roomStompClient = new Client({
     webSocketFactory: () => new SockJS(`${BASE_URL}/ws`),
-    connectHeaders: {
-      Authorization: `Bearer ${token}`,
-    },
+    connectHeaders: { Authorization: `Bearer ${token}` },
     reconnectDelay: 1000,
     debug: () => {},
 
     onConnect: () => {
-      console.log("🟢 WS Connected to Room:", roomId);
+      console.log("🟢 WS (Room) Connected:", roomId);
 
-      if (currentSubscription) {
-        try {
-          if (Array.isArray(currentSubscription)) {
-            currentSubscription.forEach((s) => s.unsubscribe());
-          } else {
-             currentSubscription.unsubscribe();
-          }
-        } catch {}
-        currentSubscription = null;
-      }
+      // Clear any stale subs from previous connection attempt
+      roomSubscriptions.forEach((s) => { try { s.unsubscribe(); } catch {} });
+      roomSubscriptions = [];
 
-      const subState = stompClient.subscribe(
+      const subState = roomStompClient.subscribe(
         `/topic/room/${roomId}`,
         (msg) => {
           try {
             const body = JSON.parse(msg.body);
-            console.log("📥 WS ROOM MESSAGE:", body);
-            currentOnStateUpdate(body);
+            console.log("📥 WS ROOM STATE:", body);
+            roomOnStateUpdate(body);
           } catch (err) {
-            console.error("WS parse error:", err);
+            console.error("WS (Room) parse error:", err);
           }
         }
       );
 
-      const subResult = stompClient.subscribe(
+      const subResult = roomStompClient.subscribe(
         `/topic/room/${roomId}/result`,
         (msg) => {
           try {
             const body = JSON.parse(msg.body);
             console.log("📥 WS ROOM RESULT:", body);
-            currentOnRoomResult(body);
+            roomOnRoomResult(body);
           } catch (err) {
-            console.error("WS parse result error:", err);
+            console.error("WS (Room) result parse error:", err);
           }
         }
       );
 
-      currentSubscription = [subState, subResult];
-
+      roomSubscriptions = [subState, subResult];
       console.log("📡 Subscribed →", `/topic/room/${roomId}`);
       console.log("📡 Subscribed →", `/topic/room/${roomId}/result`);
     },
 
     onStompError: (frame) => {
-      console.error("WS STOMP ERROR:", frame.headers["message"]);
-      console.error("Details:", frame.body);
+      console.error("WS (Room) STOMP ERROR:", frame.headers["message"]);
     },
 
     onWebSocketClose: () => {
-      console.warn("🔴 WS closed");
+      console.warn("🔴 WS (Room) closed");
     },
   });
 
-  stompClient.activate();
+  roomStompClient.activate();
 }
 
 export function disconnectRoomSocket() {
-  disconnectSocket(); // It essentially does the same cleanup
+  try {
+    roomSubscriptions.forEach((s) => { try { s.unsubscribe(); } catch {} });
+    roomSubscriptions = [];
+    if (roomStompClient) roomStompClient.deactivate();
+  } catch (e) {
+    console.warn("WS (Room) disconnect error:", e);
+  }
+  roomStompClient = null;
+  activeRoomSocketId = null;
+  roomOnStateUpdate = (state) => { console.warn("WS (Room): onStateUpdate not set", state); };
+  roomOnRoomResult  = (result) => { console.log("WS (Room): unhandled room result", result); };
 }
 
 export function sendOrderWS({ roomId, quantity }) {

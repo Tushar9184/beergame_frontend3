@@ -87,6 +87,8 @@ export default function Dashboard() {
     const gameId = localStorage.getItem("gameId");
     
     // Core Gameplay State via Game WebSocket
+    // In Room Mode, connect to gameId (individual supply chain)
+    // In Single Mode, connect to roomId (which IS the gameId)
     const socketId = (isRoomMode && gameId) ? gameId : roomId;
 
     console.log("Dashboard connecting Game socket:", socketId);
@@ -101,11 +103,11 @@ export default function Dashboard() {
 
     if (isRoomMode) {
       console.log("Dashboard connecting Room socket for results:", roomId);
-      // We only use connectRoomSocket to listen for the final result broadcast
-      import("../services/socket").then(({ connectRoomSocket, disconnectRoomSocket }) => {
+      // Separate Room socket — only listens for final result broadcast
+      import("../services/socket").then(({ connectRoomSocket }) => {
         connectRoomSocket({
           roomId,
-          onStateUpdate: () => {}, // We don't care about RoomStateDTO here, we just want GameStateDTO
+          onStateUpdate: () => {}, // We get GameStateDTO from the game socket above
           onRoomResult: (result) => {
             console.log("Dashboard received room result. Redirecting...", result);
             localStorage.setItem("roomResult", JSON.stringify(result));
@@ -220,6 +222,8 @@ export default function Dashboard() {
             </ul>
           </div>
         ) : (
+          // Card always gets the roomId (= room code) for Room Mode orders,
+          // or the game id for Single Mode — both are stored as roomId in localStorage
           <Card role={role} roomId={roomId} gameState={gameState} />
         )}
       </div>
