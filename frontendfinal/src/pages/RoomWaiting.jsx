@@ -1,153 +1,206 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { switchRole, getRoomState } from '../services/user-service';
 import { connectRoomSocket, disconnectRoomSocket } from '../services/socket';
 import './room.css';
 
 const ROLES = ['RETAILER', 'WHOLESALER', 'DISTRIBUTOR', 'MANUFACTURER'];
-const DEFAULT_TEAMS = ['ALPHA', 'BETA', 'GAMMA', 'DELTA'];
-const REQUIRED_PLAYERS = 16; 
+const REQUIRED_PLAYERS = 16;
+
+/**
+ * Parse ANY backend response shape into a uniform
+ * { slots: { "ROLE_TEAMNAME": "username" }, teams: Set<string> } object.
+ * Handles:
+ *   - RoomStateDTO  → newState.players  (flat list with teamName / role / userName)
+ *   - GameRoom JSON → newState.teams    (nested list of team objects with .players)
+ */
+function parseRoomState(newState) {
+    const slots = {};
+    const teams = new Set();
+
+    if (!newState) return { slots, teams };
+
+    // ── Scenario A: flat players list (RoomStateDTO) ─────────────────────────
+    if (newState.players && newState.players.length > 0) {
+        newState.players.forEach(p => {
+            const role = (p.role || p.roleType || p.assignedRole || '').toUpperCase();
+            const team = (p.teamName || p.initialTeamName || p.team || '').toUpperCase().trim();
+            if (!role || !team) return;
+            const key = `${role}_${team}`;
+            slots[key] = p.userName || p.username || '?';
+            teams.add(team);
+        });
+    }
+
+    // ── Scenario B: nested teams list (GameRoom entity) ───────────────────────
+    if (newState.teams && newState.teams.length > 0) {
+        newState.teams.forEach(t => {
+            const team = (t.teamName || t.name || '').toUpperCase().trim();
+            if (!team) return;
+            teams.add(team);
+            (t.players || []).forEach(p => {
+                const role = (p.role || p.roleType || '').toUpperCase();
+                if (!role) return;
+                const key = `${role}_${team}`;
+                slots[key] = p.userName || p.username || '?';
+            });
+        });
+    }
+
+    return { slots, teams };
+}
 
 export default function RoomWaiting() {
-    const { roomId } = useParams();
-    const navigate = useNavigate();
-    
-    const [occupiedSlots, setOccupiedSlots] = useState({}); 
-    const [teamsFound, setTeamsFound] = useState([]);
-    const [currentUser] = useState(localStorage.getItem("username") || "Guest");
-    const [isSwitching, setIsSwitching] = useState(false);
+    const { roomId }      = useParams();
+    const navigate        = useNavigate();
+    const location        = useLocation();
+    const currentUser     = localStorage.getItem('username') || 'Guest';
+    const myTeamName      = localStorage.getItem('teamName') || '';
+    const myRole          = localStorage.getItem('role') || '';
 
-    // Activity Log
-    const [activityLog, setActivityLog] = useState([]);
-    const logCounter = useRef(0);
-
-    const addLog = (message) => {
-        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-        setActivityLog(prev => [{ id: logCounter.current++, time, message }, ...prev].slice(0, 50));
+    // Seed the state immediately from the data passed via navigate() state,
+    // so the grid is correct on the very first render — no WebSocket wait.
+    const seedState = () => {
+        const initialData = location.state?.initialRoomData;
+        if (initialData) {
+            return parseRoomState(initialData);
+        }
+        // Fall back: pre-fill our own slot while HTTP fetch runs
+        const preSlots = {};
+        const preTeams = new Set();
+        if (myTeamName && myRole) {
+            const key = `${myRole.toUpperCase()}_${myTeamName.toUpperCase()}`;
+            preSlots[key] = currentUser;
+            preTeams.add(myTeamName.toUpperCase());
+        }
+        return { slots: preSlots, teams: preTeams };
     };
 
-    // --- WebSockets Logic ---
+    const seed = seedState();
+    const [occupiedSlots, setOccupiedSlots] = useState(seed.slots);
+    const [teamsFound,    setTeamsFound]    = useState(Array.from(seed.teams));
+    const [isSwitching,   setIsSwitching]   = useState(false);
+
+    // Activity Log
+    const [activityLog, setActivityLog] = useState([
+        { id: 0, time: new Date().toLocaleTimeString('en-US', { hour12: false }), message: 'SYSTEM: Communication established. Connecting to Sector 009.' }
+    ]);
+    const logCounter = useRef(1);
+
+    const addLog = useCallback((message) => {
+        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+        setActivityLog(prev => [{ id: logCounter.current++, time, message }, ...prev].slice(0, 50));
+    }, []);
+
+    // ── Apply a parsed room-state update to React state ───────────────────────
+    const applyState = useCallback((newState) => {
+        const { slots: newSlots, teams: newTeamSet } = parseRoomState(newState);
+
+        if (Object.keys(newSlots).length === 0 && newTeamSet.size === 0) return;
+
+        setOccupiedSlots(prev => {
+            Object.keys(newSlots).forEach(key => {
+                if (newSlots[key] !== prev[key] && newSlots[key] !== currentUser) {
+                    addLog(`${newSlots[key]} → ${key.replace('_', ' / ')}`);
+                }
+            });
+            return newSlots;
+        });
+
+        setTeamsFound(Array.from(newTeamSet).sort());
+
+        // Navigate when game starts
+        if (newState?.roomStatus === 'RUNNING' || newState?.status === 'RUNNING') {
+            addLog('SYSTEM: Launch sequence initiated. Redirecting...');
+            setTimeout(() => navigate(`/dashboard/${roomId}`), 1500);
+        }
+    }, [addLog, currentUser, navigate, roomId]);
+
+    // ── WebSocket + initial HTTP fetch ────────────────────────────────────────
     useEffect(() => {
         let isMounted = true;
 
-        if (activityLog.length === 0) {
-            addLog(`SYSTEM: Communication established. Connecting to Sector 009.`);
-        }
+        if (!roomId) return;
 
-        const onStateUpdate = (newState) => {
-            if (!isMounted) return;
+        connectRoomSocket({
+            roomId,
+            onStateUpdate: (state) => { if (isMounted) applyState(state); },
+        });
 
-            if (newState && (newState.players || newState.teams)) {
-                console.log("WS PAYLOAD RECEIVED:", newState);
-                
-                const newSlots = {};
-                const foundTeams = new Set();
+        // HTTP fetch for fresh state (handles players who joined before us)
+        getRoomState(roomId)
+            .then(state => { if (isMounted && state) applyState(state); })
+            .catch(err => console.warn('Initial room state fetch failed:', err));
 
-                // Build state depending on the JSON structure from backend
-                // Scenario A: Flat players list (from RoomStateDTO)
-                if (newState.players) {
-                    newState.players.forEach(p => {
-                        const r = (p.role || p.roleType || p.assignedRole || "UNKNOWN").toUpperCase();
-                        // DTO might use teamName or initialTeamName
-                        const t = (p.teamName || p.initialTeamName || p.team || "TEAM").toUpperCase();
-                        const key = `${r}_${t}`;
-                        
-                        // CRITICAL: Backend uses userName, not username
-                        newSlots[key] = p.userName || p.username || "Unknown";
-                        foundTeams.add(t);
-                    });
-                } 
-                // Scenario B: Nested teams list (GameRoom Entity structure fallback)
-                else if (newState.teams) {
-                    newState.teams.forEach(team => {
-                        const t = (team.teamName || team.name || "TEAM").toUpperCase();
-                        foundTeams.add(t);
-                        if (team.players) {
-                            team.players.forEach(p => {
-                                const r = (p.roleType || p.role || "UNKNOWN").toUpperCase();
-                                const key = `${r}_${t}`;
-                                newSlots[key] = p.userName || p.username || "Unknown";
-                            });
-                        }
-                    });
-                }
-
-                // Detect new players for activity log
-                setOccupiedSlots(prev => {
-                    Object.keys(newSlots).forEach(key => {
-                        if (newSlots[key] !== prev[key] && newSlots[key] !== currentUser) {
-                            addLog(`${newSlots[key]} joined ${key.replace('_', ' / ')}`);
-                        }
-                    });
-                    return newSlots;
-                });
-
-                setTeamsFound(Array.from(foundTeams));
-                
-                if (newState.roomStatus === 'RUNNING') {
-                    addLog(`SYSTEM: Launch sequence initiated.`);
-                    setTimeout(() => navigate(`/dashboard/${roomId}`), 1500);
-                }
-            }
-        };
-
-        if (roomId) {
-            connectRoomSocket({ roomId, onStateUpdate });
-            
-            // Fetch initial state immediately so we don't wait for the next WS broadcast
+        // Poll every 4 s as a WebSocket latency fallback
+        const pollInterval = setInterval(() => {
             getRoomState(roomId)
-                .then(initialState => {
-                    if (initialState) {
-                        onStateUpdate(initialState);
-                    }
-                })
-                .catch(err => console.error("Failed to fetch initial room state", err));
-        }
+                .then(state => { if (isMounted && state) applyState(state); })
+                .catch(() => {});
+        }, 4000);
 
-        return () => { 
-            isMounted = false; 
+        return () => {
+            isMounted = false;
+            clearInterval(pollInterval);
             disconnectRoomSocket();
         };
-    }, [roomId, navigate, currentUser]);
+    }, [roomId, applyState]);
 
-    // --- Handle Click ---
+    // ── Switch seat handler ───────────────────────────────────────────────────
     const handleSwitchSeat = async (targetTeam, targetRole) => {
         if (isSwitching) return;
-        const confirmMove = window.confirm(`Switch to ${targetRole} in ${targetTeam}?`);
-        if (!confirmMove) return;
+        if (!window.confirm(`Switch to ${targetRole} in team "${targetTeam}"?`)) return;
 
         setIsSwitching(true);
-        addLog(`OPERATOR_${currentUser}: Requesting transfer to ${targetTeam}_${targetRole}...`);
+        addLog(`OPERATOR_${currentUser}: Requesting transfer → ${targetTeam} / ${targetRole}...`);
+
+        // Optimistic update: immediately move our marker on the grid
+        setOccupiedSlots(prev => {
+            const updated = { ...prev };
+            // Remove old slot
+            Object.keys(updated).forEach(k => { if (updated[k] === currentUser) delete updated[k]; });
+            // Add new slot
+            updated[`${targetRole}_${targetTeam}`] = currentUser;
+            return updated;
+        });
+        localStorage.setItem('teamName', targetTeam);
+        localStorage.setItem('role', targetRole);
+
         try {
             await switchRole(roomId, targetTeam, targetRole, currentUser);
-        } catch (error) {
-            addLog(`SYSTEM: Role transfer failed or access denied.`);
-            alert("Failed to switch.");
+            addLog(`SYSTEM: Transfer confirmed → ${targetTeam} / ${targetRole}`);
+        } catch (err) {
+            addLog('SYSTEM: Transfer failed. Reverting...');
+            alert('Failed to switch seat.');
+            // Revert optimistic update by re-fetching
+            getRoomState(roomId).then(s => { if (s) applyState(s); });
         } finally {
             setIsSwitching(false);
         }
     };
 
-    // --- Display Logic ---
-    const displayTeams = [...teamsFound];
-    for (let i = 0; displayTeams.length < 4; i++) {
-        const fallback = DEFAULT_TEAMS[i];
-        if (!displayTeams.includes(fallback)) displayTeams.push(fallback);
-    }
-    displayTeams.sort();
+    // ── Compute display teams ─────────────────────────────────────────────────
+    // Show only REAL teams from the backend. Add placeholder rows up to 4
+    // ONLY to keep the grid looking like a full 4×4 matrix.
+    const realTeams   = [...teamsFound].sort();
+    const placeholders = 4 - realTeams.length;
+    const displayTeams = [
+        ...realTeams,
+        ...Array.from({ length: placeholders > 0 ? placeholders : 0 }, (_, i) => `SLOT_${i + 1}`)
+    ];
 
     const currentCount = Object.keys(occupiedSlots).length;
-    const isFull = currentCount >= REQUIRED_PLAYERS;
+    const isFull       = currentCount >= REQUIRED_PLAYERS;
 
     return (
         <div className="tactical-wrapper">
-            
-            {/* SIDEBAR */}
+
+            {/* ── SIDEBAR ─────────────────────────────────────── */}
             <aside className="tactical-sidebar">
                 <div className="sidebar-brand">
                     <h2 className="brand-title">LOGISTICS_COMMAND_V1.0</h2>
                 </div>
-                
+
                 <div className="sidebar-sector">
                     <h3 className="sector-name">SECTOR_04</h3>
                     <div className="sector-status">STATUS: OPERATIONAL</div>
@@ -162,18 +215,16 @@ export default function RoomWaiting() {
                 </div>
 
                 <div className="sidebar-bottom">
-                    <button className="launch-btn" onClick={() => navigate('/')}>
-                        LAUNCH_MISSION
-                    </button>
+                    <button className="launch-btn" onClick={() => navigate('/')}>LAUNCH_MISSION</button>
                     <div className="menu-item">TERMINAL</div>
                     <div className="menu-item">LOGOUT</div>
                 </div>
             </aside>
 
-            {/* MAIN AREA */}
+            {/* ── MAIN ────────────────────────────────────────── */}
             <main className="tactical-main">
                 <div className="tactical-topbar">
-                    <div className="topbar-item" style={{color: '#ebb542'}}>LOBBY</div>
+                    <div className="topbar-item" style={{ color: '#ebb542' }}>LOBBY</div>
                     <div className="topbar-item">INTEL</div>
                     <div className="topbar-item">SUPPLY_CHAIN</div>
                     <div className="topbar-item">COMMS</div>
@@ -191,40 +242,47 @@ export default function RoomWaiting() {
                 </div>
 
                 <div className="tactical-content-split">
-                    
-                    {/* LEFT: 4x4 GRID */}
+
+                    {/* LEFT: 4×4 GRID */}
                     <div className="grid-wrapper">
                         <div className="tactical-grid">
-                            {displayTeams.slice(0, 4).map((tName) => {
+                            {displayTeams.map((tName) => {
+                                const isPlaceholder = tName.startsWith('SLOT_');
                                 return ROLES.map(role => {
-                                    const key = `${role}_${tName}`;
-                                    const occupant = occupiedSlots[key];
-                                    const isMe = occupant === currentUser;
-                                    const isTaken = !!occupant;
+                                    const key      = `${role}_${tName}`;
+                                    const occupant = isPlaceholder ? null : occupiedSlots[key];
+                                    const isMe     = occupant === currentUser;
+                                    const isTaken  = !!occupant;
+                                    const canClick = !isPlaceholder && !isTaken;
 
-                                    let statusClass = "status-free";
-                                    if (isMe) statusClass = "status-me";
-                                    else if (isTaken) statusClass = "status-taken";
-
-                                    const canClick = !isTaken && !isMe;
+                                    let statusClass = isPlaceholder ? 'status-empty' : 'status-free';
+                                    if (isMe)    statusClass = 'status-me';
+                                    else if (isTaken) statusClass = 'status-taken';
 
                                     return (
-                                        <div 
-                                            key={key} 
+                                        <div
+                                            key={key}
                                             className={`tactical-card ${statusClass}`}
-                                            onClick={() => canClick ? handleSwitchSeat(tName, role) : null}
+                                            onClick={() => canClick && handleSwitchSeat(tName, role)}
+                                            title={isPlaceholder ? 'Waiting for team…' : `${tName} / ${role}`}
                                         >
-                                            <div className="card-label">{tName} / {role}</div>
-                                            
+                                            {/* Team row label */}
+                                            <div className="card-label">
+                                                {isPlaceholder ? '— / ' : `${tName} / `}
+                                                <span style={{ color: '#ebb542' }}>{role}</span>
+                                            </div>
+
                                             {isTaken ? (
                                                 <>
                                                     <div className="card-player">{occupant}</div>
-                                                    <div className="card-status">{isMe ? "ACTIVE_NODE" : "LOCKED"}</div>
+                                                    <div className="card-status">{isMe ? '✅ ACTIVE_NODE' : '🔒 LOCKED'}</div>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="add-icon">+</div>
-                                                    <div className="card-status" style={{color:'#ebb542', fontSize: '0.8rem'}}>SELECT ROLE</div>
+                                                    <div className="add-icon">{isPlaceholder ? '…' : '+'}</div>
+                                                    <div className="card-status" style={{ color: isPlaceholder ? '#446' : '#ebb542', fontSize: '0.75rem' }}>
+                                                        {isPlaceholder ? 'AWAITING TEAM' : 'SELECT ROLE'}
+                                                    </div>
                                                 </>
                                             )}
                                         </div>
@@ -234,18 +292,18 @@ export default function RoomWaiting() {
                         </div>
                     </div>
 
-                    {/* RIGHT: TRACKING PANELS */}
+                    {/* RIGHT PANELS */}
                     <div className="tactical-right-panel">
                         <div className="enrollment-panel">
                             <div className="panel-header">LIVE ENROLLMENT</div>
                             <h2>{currentCount}/{REQUIRED_PLAYERS} SLOTS</h2>
                             <div className="enrollment-bar">
                                 {[...Array(16)].map((_, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="enrollment-fill" 
-                                        style={{flex: 1, opacity: i < currentCount ? 1 : 0.1}}
-                                    ></div>
+                                    <div
+                                        key={i}
+                                        className="enrollment-fill"
+                                        style={{ flex: 1, opacity: i < currentCount ? 1 : 0.1 }}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -255,30 +313,27 @@ export default function RoomWaiting() {
                             <div className="log-list">
                                 {activityLog.map(log => (
                                     <div key={log.id} className="log-item">
-                                        <span className="log-time">[{log.time}]</span>
-                                        {log.message}
+                                        <span className="log-time">[{log.time}]</span> {log.message}
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
-
                 </div>
 
-                {/* BOTTOM MARQUEE OVERLAY */}
+                {/* BOTTOM OVERLAY */}
                 <div className="tactical-overlay-bottom">
-                    <div style={{color: '#ebb542', fontSize: '0.8rem', fontWeight: 'bold'}}>
-                        <span style={{display:'inline-block', width: '8px', height: '8px', background: '#ebb542', borderRadius: '50%', marginRight: '8px', animation: 'pulse 2s infinite'}}></span>
+                    <div style={{ color: '#ebb542', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#ebb542', borderRadius: '50%', marginRight: 8, animation: 'pulse 2s infinite' }} />
                         COMMUNICATION_UPLINK_ESTABLISHED
                     </div>
                     <div className="waiting-marquee">
-                        &#x22BA; {isFull ? 'ALL SYSTEMS GO. INITIATING LAUNCH SEQUENCE...' : 'WAITING FOR FULL SQUADRON...'} &#x22BB;
+                        ⊺ {isFull ? 'ALL SYSTEMS GO — INITIATING LAUNCH SEQUENCE…' : 'WAITING FOR FULL SQUADRON…'} ⊻
                     </div>
                     <div className="latency-stats">
-                        LATENCY: <strong>24MS</strong> | JITTER: <strong>1MS</strong>
+                        LATENCY: <strong>live</strong> | POLL: <strong>4s</strong>
                     </div>
                 </div>
-
             </main>
         </div>
     );

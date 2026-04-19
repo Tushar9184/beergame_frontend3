@@ -23,13 +23,13 @@ const CreateRoom = () => {
         
         setIsLoading(true);
         try {
-            // STEP 1: Create the Room (Get ID)
-            const roomData = await createGameRoom(username, email);
-            const newRoomId = roomData.id || roomData.roomId; // Fallback for either format
+            // STEP 1: Create the Room — backend returns RoomStateDTO { roomId, roomStatus, ... }
+            const roomData = await createGameRoom();
+            const newRoomId = roomData.roomId || roomData.id; // roomId is the DTO field
             
             // STEP 2: Immediately Join that Room
             // This places the host in the specific seat they chose
-            await joinGameRoom(newRoomId, teamName, selectedRole, username);
+            const joinedRoomData = await joinGameRoom(newRoomId, teamName, selectedRole, username);
 
             // STEP 3: Save Session Info
             localStorage.setItem("username", username);
@@ -37,8 +37,8 @@ const CreateRoom = () => {
             localStorage.setItem("teamName", teamName);
             localStorage.setItem("role", selectedRole);
 
-            // STEP 4: Navigate
-            navigate(`/room/${newRoomId}`);
+            // STEP 4: Navigate with initial backend state!
+            navigate(`/room/${newRoomId}`, { state: { initialRoomData: joinedRoomData } });
             
         } catch (error) {
             console.error(error);

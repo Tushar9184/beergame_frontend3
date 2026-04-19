@@ -84,15 +84,13 @@ export const joinLobby = async (gameId, role) => {
 };
 
 /**
- * Creates a game room (not used heavily in your final flow).
+ * Creates a game room.
+ * Backend now returns RoomStateDTO: { roomId, roomStatus, currentWeek, players[] }
  */
-export const createGameRoom = async (username, email) => {
+export const createGameRoom = async () => {
   try {
-    const res = await myAxios.post("/api/room/create", { 
-      username, 
-      email 
-    });
-    return res.data; // Returns { roomId: "XYZ123" }
+    const res = await myAxios.post("/api/room/create");
+    return res.data; // RoomStateDTO
   } catch (err) {
     console.error("❌ Error creating room:", err);
     throw err;
@@ -100,14 +98,18 @@ export const createGameRoom = async (username, email) => {
 };
 
 // 2. PLAYER: Join a 16-player Room (Requires Team Name)
+// Backend now returns RoomStateDTO: { roomId, roomStatus, currentWeek, players[] }
 export const joinGameRoom = async (roomId, teamName, role, username) => {
   try {
     const res = await myAxios.post(`/api/room/${roomId}/join`, {
       username,
-      teamName, // "Team Alpha", "Team 1", etc.
-      role: role.toUpperCase() // "RETAILER", etc.
+      teamName,
+      role: role.toUpperCase()
     });
-    return res.data;
+    // res.data is RoomStateDTO — roomId field (not id)
+    const returnedRoomId = res?.data?.roomId ?? roomId;
+    localStorage.setItem("roomId", returnedRoomId);
+    return res.data; // Full RoomStateDTO for seeding lobby grid
   } catch (err) {
     console.error("❌ Error joining room:", err);
     throw err;

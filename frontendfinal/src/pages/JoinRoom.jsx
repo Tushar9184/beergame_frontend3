@@ -21,15 +21,15 @@ const JoinRoom = () => {
         setIsLoading(true);
         try {
             // 1. API Call
-            await joinGameRoom(roomId, teamName, selectedRole, username);
+            const joinedRoomData = await joinGameRoom(roomId, teamName, selectedRole, username);
 
             // 2. Local Storage
             localStorage.setItem("username", username);
             localStorage.setItem("teamName", teamName);
             localStorage.setItem("role", selectedRole);
 
-            // 3. Navigate
-            navigate(`/room/${roomId}`);
+            // 3. Navigate with initial backend state!
+            navigate(`/room/${roomId}`, { state: { initialRoomData: joinedRoomData } });
 
         } catch (error) {
             console.error(error);
