@@ -8,22 +8,22 @@ import HowToPlay from "../Components/dashboard/Footer.jsx";
 import { connectSocket, disconnectSocket } from "../services/socket";
 import "./DashBoard.css";
 
-function TurnTimer({ currentWeek }) {
-  const [timeLeft, setTimeLeft] = useState(40);
+function TurnTimer({ currentWeek, isReady }) {
+  const [timeLeft, setTimeLeft] = useState(60);
 
   useEffect(() => {
-    setTimeLeft(40);
+    setTimeLeft(60);
   }, [currentWeek]);
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || isReady) return;
 
     const timerObj = setInterval(() => {
       setTimeLeft(prev => prev - 1);
     }, 1000);
 
     return () => clearInterval(timerObj);
-  }, [timeLeft]);
+  }, [timeLeft, isReady]);
 
   return (
     <div style={{
@@ -36,9 +36,9 @@ function TurnTimer({ currentWeek }) {
       maxWidth: '400px'
     }}>
       <h3 style={{ margin: 0, color: timeLeft > 10 ? '#00e5ff' : '#ff4444' }}>
-        Turn Time Left: {timeLeft}s
+        {isReady ? "Order Placed. Waiting for next turn..." : `Turn Time Left: ${timeLeft}s`}
       </h3>
-      {timeLeft === 0 && (
+      {timeLeft === 0 && !isReady && (
         <p style={{ color: '#ff4444', margin: '5px 0 0 0', fontSize: '0.9rem' }}>
           AFK Timeout! Bot is taking your turn...
         </p>
@@ -165,7 +165,7 @@ export default function Dashboard() {
       </div>
 
       <div className="fade-in fade-in-delay-1">
-        <TurnTimer currentWeek={currentWeek} />
+        <TurnTimer currentWeek={currentWeek} isReady={iAmReady} />
       </div>
 
       <div className="fade-in fade-in-delay-2">

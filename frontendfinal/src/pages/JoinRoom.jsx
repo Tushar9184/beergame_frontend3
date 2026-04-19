@@ -52,7 +52,7 @@ const JoinRoom = () => {
                 <input className="room-input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your Name" />
 
                 <label className="label-text">Team Name</label>
-                <input className="room-input" value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="e.g. Team Alpha" />
+                <input className="room-input" value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="e.g. ALPHA" />
 
                 <label className="label-text">Role</label>
                 <select className="room-select" value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>

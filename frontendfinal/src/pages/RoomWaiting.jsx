@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRoomState, switchRole } from '../services/user-service';
+import { switchRole } from '../services/user-service';
+import { connectRoomSocket, disconnectRoomSocket } from '../services/socket';
 import './room.css';
 
-const ROLES = ['Manufacturer', 'Wholesaler', 'Distributor', 'Retailer'];
+const ROLES = ['RETAILER', 'WHOLESALER', 'DISTRIBUTOR', 'MANUFACTURER'];
+const DEFAULT_TEAMS = ['ALPHA', 'BETA', 'GAMMA', 'DELTA'];
 const REQUIRED_PLAYERS = 16; 
 
 export default function RoomWaiting() {
@@ -12,54 +14,72 @@ export default function RoomWaiting() {
     
     const [occupiedSlots, setOccupiedSlots] = useState({}); 
     const [teamsFound, setTeamsFound] = useState([]);
-    
-    // Get current user (or guest)
     const [currentUser] = useState(localStorage.getItem("username") || "Guest");
     const [isSwitching, setIsSwitching] = useState(false);
 
-    // --- Configuration ---
-    // Set REACT_APP_TEST_MODE=true in your .env.local to use mock data during development.
-    // In production this is always false.
-    const TEST_MODE = process.env.REACT_APP_TEST_MODE === 'true';
+    // Activity Log
+    const [activityLog, setActivityLog] = useState([]);
+    const logCounter = useRef(0);
 
-    // --- Polling Logic ---
+    const addLog = (message) => {
+        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+        setActivityLog(prev => [{ id: logCounter.current++, time, message }, ...prev].slice(0, 50));
+    };
+
+    // --- WebSockets Logic ---
     useEffect(() => {
         let isMounted = true;
-        const fetchRoom = async () => {
-            let data;
-            if (TEST_MODE) {
-                // Mock Data
-                data = {
-                    roomStatus: "WAITING",
-                    players: [
-                        { username: "Alice", role: "Manufacturer", teamName: "Team 1" },
-                        { username: currentUser, role: "Wholesaler", teamName: "Team 1" }, 
-                        { username: "Bob", role: "Distributor", teamName: "Team 2" }
-                    ]
-                };
-            } else {
-                if (!roomId) return;
-                data = await getRoomState(roomId);
-            }
-            
-            if (isMounted && data && data.players) {
+
+        if (activityLog.length === 0) {
+            addLog(`SYSTEM: Communication established. Connecting to Sector 009.`);
+        }
+
+        const onStateUpdate = (newState) => {
+            if (!isMounted) return;
+
+            if (newState && newState.players) {
                 const newSlots = {};
                 const foundTeams = new Set();
-                data.players.forEach(p => {
-                    const key = `${p.role.toUpperCase()}_${p.teamName}`;
+
+                // Build state from PlayerAssignmentDTO
+                // Needs: username, initialTeamName, assignedRole
+                newState.players.forEach(p => {
+                    const r = p.assignedRole ? p.assignedRole.toUpperCase() : "UNKNOWN";
+                    const t = p.initialTeamName ? p.initialTeamName.toUpperCase() : "TEAM";
+                    const key = `${r}_${t}`;
+
                     newSlots[key] = p.username;
-                    foundTeams.add(p.teamName);
+                    foundTeams.add(t);
                 });
-                setOccupiedSlots(newSlots);
+
+                // Detect new players for activity log
+                setOccupiedSlots(prev => {
+                    Object.keys(newSlots).forEach(key => {
+                        if (newSlots[key] !== prev[key] && newSlots[key] !== currentUser) {
+                            addLog(`${newSlots[key]} joined ${key.replace('_', ' / ')}`);
+                        }
+                    });
+                    return newSlots;
+                });
+
                 setTeamsFound(Array.from(foundTeams));
                 
-                if (data.roomStatus === 'RUNNING' && !TEST_MODE) navigate(`/dashboard/${roomId}`);
+                if (newState.roomStatus === 'RUNNING') {
+                    addLog(`SYSTEM: Launch sequence initiated.`);
+                    setTimeout(() => navigate(`/dashboard/${roomId}`), 1500);
+                }
             }
         };
-        fetchRoom();
-        const interval = setInterval(fetchRoom, 2000);
-        return () => { isMounted = false; clearInterval(interval); };
-    }, [roomId, navigate, currentUser, TEST_MODE]);
+
+        if (roomId) {
+            connectRoomSocket({ roomId, onStateUpdate });
+        }
+
+        return () => { 
+            isMounted = false; 
+            disconnectRoomSocket();
+        };
+    }, [roomId, navigate, currentUser]);
 
     // --- Handle Click ---
     const handleSwitchSeat = async (targetTeam, targetRole) => {
@@ -68,13 +88,11 @@ export default function RoomWaiting() {
         if (!confirmMove) return;
 
         setIsSwitching(true);
+        addLog(`OPERATOR_${currentUser}: Requesting transfer to ${targetTeam}_${targetRole}...`);
         try {
-            if (TEST_MODE) {
-                alert(`Simulated move to ${targetTeam}`); 
-            } else {
-                await switchRole(roomId, targetTeam, targetRole, currentUser);
-            }
+            await switchRole(roomId, targetTeam, targetRole, currentUser);
         } catch (error) {
+            addLog(`SYSTEM: Role transfer failed or access denied.`);
             alert("Failed to switch.");
         } finally {
             setIsSwitching(false);
@@ -83,59 +101,156 @@ export default function RoomWaiting() {
 
     // --- Display Logic ---
     const displayTeams = [...teamsFound];
-    while (displayTeams.length < 4) {
-        displayTeams.push(`Team ${displayTeams.length + 1}`);
+    for (let i = 0; displayTeams.length < 4; i++) {
+        const fallback = DEFAULT_TEAMS[i];
+        if (!displayTeams.includes(fallback)) displayTeams.push(fallback);
     }
-    displayTeams.sort(); 
+    displayTeams.sort();
 
     const currentCount = Object.keys(occupiedSlots).length;
+    const isFull = currentCount >= REQUIRED_PLAYERS;
 
     return (
-        <div className="room-container">
-            <header className="header-info">
-                <h1 className="room-title">Room: {roomId || "TEST-ROOM"}</h1>
-                <p className="room-subtitle">
-                    Players Ready: <strong>{currentCount} / {REQUIRED_PLAYERS}</strong>
-                </p>
-                {TEST_MODE && <span style={{background:'#fef3c7', padding:'4px 8px', borderRadius:'4px', fontSize:'0.8rem', color:'#d97706'}}>⚠️ Test Mode</span>}
-            </header>
+        <div className="tactical-wrapper">
+            
+            {/* SIDEBAR */}
+            <aside className="tactical-sidebar">
+                <div className="sidebar-brand">
+                    <h2 className="brand-title">LOGISTICS_COMMAND_V1.0</h2>
+                </div>
+                
+                <div className="sidebar-sector">
+                    <h3 className="sector-name">SECTOR_04</h3>
+                    <div className="sector-status">STATUS: OPERATIONAL</div>
+                </div>
 
-            <div className="grid-container">
-                {displayTeams.slice(0, 4).map((tName, index) => (
-                    <div key={index} className="team-card">
-                        <h3 className="team-title">{tName}</h3>
-                        
-                        {ROLES.map(role => {
-                            const key = `${role.toUpperCase()}_${tName}`;
-                            const occupant = occupiedSlots[key];
-                            const isMe = occupant === currentUser;
-                            const isTaken = !!occupant;
+                <div className="sidebar-menu">
+                    <div className="menu-item active">DASHBOARD</div>
+                    <div className="menu-item">DEPLOYMENT</div>
+                    <div className="menu-item">TELEMETRY</div>
+                    <div className="menu-item">STOCKS</div>
+                    <div className="menu-item">ARCHIVE</div>
+                </div>
 
-                            // Determine Class
-                            let statusClass = "status-free";
-                            if (isMe) statusClass = "status-me";
-                            else if (isTaken) statusClass = "status-taken";
+                <div className="sidebar-bottom">
+                    <button className="launch-btn" onClick={() => navigate('/')}>
+                        LAUNCH_MISSION
+                    </button>
+                    <div className="menu-item">TERMINAL</div>
+                    <div className="menu-item">LOGOUT</div>
+                </div>
+            </aside>
 
-                            // Determine Click Action
-                            const canClick = !isTaken && !isMe;
+            {/* MAIN AREA */}
+            <main className="tactical-main">
+                <div className="tactical-topbar">
+                    <div className="topbar-item" style={{color: '#ebb542'}}>LOBBY</div>
+                    <div className="topbar-item">INTEL</div>
+                    <div className="topbar-item">SUPPLY_CHAIN</div>
+                    <div className="topbar-item">COMMS</div>
+                </div>
 
-                            return (
-                                <div 
-                                    key={key} 
-                                    className={`role-slot ${statusClass}`}
-                                    onClick={() => canClick ? handleSwitchSeat(tName, role) : null}
-                                    title={canClick ? "Click to join this seat" : ""}
-                                >
-                                    <div className="role-label">{role}</div>
-                                    <div className="player-name">
-                                        {isTaken ? occupant : "Available"}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                <div className="tactical-header-container">
+                    <div className="tactical-title-box">
+                        <h1>16-PLAYER TACTICAL LOBBY</h1>
+                        <div className="tactical-subtitle">SECTOR: EUROPE_WEST_BETA | CLUSTER: 009</div>
                     </div>
-                ))}
-            </div>
+                    <div className="tactical-room-code">
+                        <h2>GSV-99-ALPHA</h2>
+                        <p>ROOM IDENTITY PROTOCOL: {roomId}</p>
+                    </div>
+                </div>
+
+                <div className="tactical-content-split">
+                    
+                    {/* LEFT: 4x4 GRID */}
+                    <div className="grid-wrapper">
+                        <div className="tactical-grid">
+                            {displayTeams.slice(0, 4).map((tName) => {
+                                return ROLES.map(role => {
+                                    const key = `${role}_${tName}`;
+                                    const occupant = occupiedSlots[key];
+                                    const isMe = occupant === currentUser;
+                                    const isTaken = !!occupant;
+
+                                    let statusClass = "status-free";
+                                    if (isMe) statusClass = "status-me";
+                                    else if (isTaken) statusClass = "status-taken";
+
+                                    const canClick = !isTaken && !isMe;
+
+                                    return (
+                                        <div 
+                                            key={key} 
+                                            className={`tactical-card ${statusClass}`}
+                                            onClick={() => canClick ? handleSwitchSeat(tName, role) : null}
+                                        >
+                                            <div className="card-label">{tName} / {role}</div>
+                                            
+                                            {isTaken ? (
+                                                <>
+                                                    <div className="card-player">{occupant}</div>
+                                                    <div className="card-status">{isMe ? "ACTIVE_NODE" : "LOCKED"}</div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="add-icon">+</div>
+                                                    <div className="card-status" style={{color:'#ebb542', fontSize: '0.8rem'}}>SELECT ROLE</div>
+                                                </>
+                                            )}
+                                        </div>
+                                    );
+                                });
+                            })}
+                        </div>
+                    </div>
+
+                    {/* RIGHT: TRACKING PANELS */}
+                    <div className="tactical-right-panel">
+                        <div className="enrollment-panel">
+                            <div className="panel-header">LIVE ENROLLMENT</div>
+                            <h2>{currentCount}/{REQUIRED_PLAYERS} SLOTS</h2>
+                            <div className="enrollment-bar">
+                                {[...Array(16)].map((_, i) => (
+                                    <div 
+                                        key={i} 
+                                        className="enrollment-fill" 
+                                        style={{flex: 1, opacity: i < currentCount ? 1 : 0.1}}
+                                    ></div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="activity-panel">
+                            <div className="panel-header">ACTIVITY LOG_</div>
+                            <div className="log-list">
+                                {activityLog.map(log => (
+                                    <div key={log.id} className="log-item">
+                                        <span className="log-time">[{log.time}]</span>
+                                        {log.message}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* BOTTOM MARQUEE OVERLAY */}
+                <div className="tactical-overlay-bottom">
+                    <div style={{color: '#ebb542', fontSize: '0.8rem', fontWeight: 'bold'}}>
+                        <span style={{display:'inline-block', width: '8px', height: '8px', background: '#ebb542', borderRadius: '50%', marginRight: '8px', animation: 'pulse 2s infinite'}}></span>
+                        COMMUNICATION_UPLINK_ESTABLISHED
+                    </div>
+                    <div className="waiting-marquee">
+                        &#x22BA; {isFull ? 'ALL SYSTEMS GO. INITIATING LAUNCH SEQUENCE...' : 'WAITING FOR FULL SQUADRON...'} &#x22BB;
+                    </div>
+                    <div className="latency-stats">
+                        LATENCY: <strong>24MS</strong> | JITTER: <strong>1MS</strong>
+                    </div>
+                </div>
+
+            </main>
         </div>
     );
 }

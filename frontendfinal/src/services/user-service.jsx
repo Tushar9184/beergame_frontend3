@@ -88,7 +88,7 @@ export const joinLobby = async (gameId, role) => {
  */
 export const createGameRoom = async (username, email) => {
   try {
-    const res = await myAxios.post("/api/rooms/create", { 
+    const res = await myAxios.post("/api/room/create", { 
       username, 
       email 
     });
@@ -102,7 +102,7 @@ export const createGameRoom = async (username, email) => {
 // 2. PLAYER: Join a 16-player Room (Requires Team Name)
 export const joinGameRoom = async (roomId, teamName, role, username) => {
   try {
-    const res = await myAxios.post(`/api/rooms/${roomId}/join`, {
+    const res = await myAxios.post(`/api/room/${roomId}/join`, {
       username,
       teamName, // "Team Alpha", "Team 1", etc.
       role: role.toUpperCase() // "RETAILER", etc.
@@ -117,7 +117,7 @@ export const joinGameRoom = async (roomId, teamName, role, username) => {
 // 3. POLL: Get the status of the Room (Who is in the 16 slots?)
 export const getRoomState = async (roomId) => {
   try {
-    const res = await myAxios.get(`/api/rooms/${roomId}`);
+    const res = await myAxios.get(`/api/room/${roomId}`);
     return res.data; 
   } catch (err) {
     return null; 
@@ -127,7 +127,7 @@ export const switchRole = async (roomId, newTeamName, newRole, username) => {
   try {
     // If your backend has a specific "move" endpoint, use that.
     // Otherwise, re-calling 'join' usually updates the player's position.
-    const res = await myAxios.post(`/api/rooms/${roomId}/join`, {
+    const res = await myAxios.post(`/api/room/${roomId}/join`, {
       username,
       teamName: newTeamName,
       role: newRole.toUpperCase()

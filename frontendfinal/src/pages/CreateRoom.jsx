@@ -24,8 +24,8 @@ const CreateRoom = () => {
         setIsLoading(true);
         try {
             // STEP 1: Create the Room (Get ID)
-            const roomData = await createGameRoom(username, email);
-            const newRoomId = roomData.roomId; // Ensure backend returns 'roomId'
+            const roomData = await createGameRoom();
+            const newRoomId = roomData.id || roomData.roomId; // Fallback for either format
             
             // STEP 2: Immediately Join that Room
             // This places the host in the specific seat they chose
@@ -60,7 +60,7 @@ const CreateRoom = () => {
                 <input 
                     className="room-input"
                     type="text" 
-                    placeholder="Host Name" 
+                    placeholder="Enter Username" 
                     value={username} 
                     onChange={(e) => setUsername(e.target.value)} 
                 />
@@ -81,7 +81,7 @@ const CreateRoom = () => {
                 <input 
                     className="room-input"
                     type="text" 
-                    placeholder="e.g. Team Alpha" 
+                    placeholder="e.g. ALPHA" 
                     value={teamName} 
                     onChange={(e) => setTeamName(e.target.value)} 
                 />

@@ -125,6 +125,95 @@ export function disconnectSocket() {
   };
 }
 
+export function connectRoomSocket({ roomId, onStateUpdate }) {
+  if (!roomId) {
+    console.error("WS (Room): Missing roomId");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("WS (Room): Missing JWT");
+    return;
+  }
+
+  const BASE_URL =
+    process.env.REACT_APP_API_BASE ||
+    "https://the-beer-game-backend.onrender.com";
+
+  currentOnStateUpdate = onStateUpdate;
+
+  if (stompClient && stompClient.connected && activeRoomId === roomId) {
+    console.log("WS (Room) already active, callback updated for:", roomId);
+    return;
+  }
+
+  try {
+    if (currentSubscription) {
+      currentSubscription.unsubscribe();
+      currentSubscription = null;
+    }
+    if (stompClient) {
+      stompClient.deactivate();
+    }
+  } catch (err) {
+    console.warn("WS cleanup error:", err);
+  }
+
+  stompClient = null;
+  activeRoomId = roomId;
+
+  stompClient = new Client({
+    webSocketFactory: () => new SockJS(`${BASE_URL}/ws`),
+    connectHeaders: {
+      Authorization: `Bearer ${token}`,
+    },
+    reconnectDelay: 1000,
+    debug: () => {},
+
+    onConnect: () => {
+      console.log("🟢 WS Connected to Room:", roomId);
+
+      if (currentSubscription) {
+        try {
+          currentSubscription.unsubscribe();
+        } catch {}
+        currentSubscription = null;
+      }
+
+      currentSubscription = stompClient.subscribe(
+        `/topic/room/${roomId}`,
+        (msg) => {
+          try {
+            const body = JSON.parse(msg.body);
+            console.log("📥 WS ROOM MESSAGE:", body);
+            currentOnStateUpdate(body);
+          } catch (err) {
+            console.error("WS parse error:", err);
+          }
+        }
+      );
+
+      console.log("📡 Subscribed →", `/topic/room/${roomId}`);
+    },
+
+    onStompError: (frame) => {
+      console.error("WS STOMP ERROR:", frame.headers["message"]);
+      console.error("Details:", frame.body);
+    },
+
+    onWebSocketClose: () => {
+      console.warn("🔴 WS closed");
+    },
+  });
+
+  stompClient.activate();
+}
+
+export function disconnectRoomSocket() {
+  disconnectSocket(); // It essentially does the same cleanup
+}
+
 export function sendOrderWS({ roomId, quantity }) {
   if (!stompClient || !stompClient.connected) {
     console.warn("WS not connected — can't send order");
