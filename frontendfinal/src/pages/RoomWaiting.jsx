@@ -116,14 +116,12 @@ export default function RoomWaiting() {
                     addLog(`${newSlots[key]} → ${key.replace('_', ' / ')}`);
                 }
             });
-            // MERGE new data on top of existing — prevents flickering
-            return { ...prev, ...newSlots };
+            // Overwrite entirely to clear players who moved to a new seat!
+            return newSlots;
         });
 
-        setTeamsFound(prev => {
-            const merged = new Set([...prev, ...Array.from(newTeamSet)]);
-            return Array.from(merged).sort();
-        });
+        // Overwrite teams list based on what the backend currently says
+        setTeamsFound(Array.from(newTeamSet).sort());
 
         // Navigate when game starts
         if (newState?.roomStatus === 'RUNNING' || newState?.status === 'RUNNING') {
