@@ -5,10 +5,13 @@ import "./Card.css";
 export default function Card({ role, roomId, gameState = {} }) {
   const roleKey = (role ?? "").toUpperCase();
 
+  // Java record boolean 'isReadyForNextTurn' serializes as 'readyForNextTurn' in JSON
+  // Java record field 'backlog' serializes as 'backlog' (not backOrder)
   const me =
     (gameState.players || []).find(
       (p) => (p.role ?? "").toUpperCase() === roleKey
     ) || {};
+  const isReady = me.readyForNextTurn ?? me.isReadyForNextTurn ?? false;
 
   const [orderQty, setOrderQty] = useState(me.currentOrder ?? 4);
 
@@ -83,7 +86,7 @@ export default function Card({ role, roomId, gameState = {} }) {
           {/* 2. BACKLOG */}
           <div className="stat-box">
               <p>⚠️ Backlog</p>
-              <h2>{me.backOrder ?? me.backlog ?? 0} units</h2>
+              <h2>{me.backlog ?? me.backOrder ?? 0} units</h2>
           </div>
           {/* 3. INCOMING SHIPMENT */}
           <div className="stat-box">
@@ -119,11 +122,11 @@ export default function Card({ role, roomId, gameState = {} }) {
           <button 
             type="submit" 
             className="submit-order-btn" 
-            disabled={me?.isReadyForNextTurn || gameState.gameStatus === 'FINISHED'}
+            disabled={isReady || gameState.gameStatus === 'FINISHED'}
           >
             {gameState.gameStatus === 'FINISHED' 
               ? "🎉 Game Finished! Waiting for other teams..."
-              : me?.isReadyForNextTurn
+              : isReady
               ? "✅ Order Submitted — Waiting for others..."
               : `✔ Submit Order for Week ${gameState.currentWeek}`
             }

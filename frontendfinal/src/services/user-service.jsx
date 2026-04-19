@@ -125,6 +125,22 @@ export const getRoomState = async (roomId) => {
     return null; 
   }
 };
+
+/**
+ * GET /api/game/{gameId}
+ * Fetches current GameStateDTO for a game.
+ * Called by Dashboard on mount to seed initial state
+ * (solves race condition where WS broadcast fires before subscription).
+ */
+export const getGameState = async (gameId) => {
+  try {
+    const res = await myAxios.get(`/api/game/${gameId}`);
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error fetching game state:", err);
+    return null;
+  }
+};
 export const switchRole = async (roomId, newTeamName, newRole) => {
   try {
     // JoinRoomRequestDTO only expects: { teamName, role }
