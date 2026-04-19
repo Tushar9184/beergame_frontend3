@@ -126,6 +126,20 @@ export default function RoomWaiting() {
         // Navigate when game starts
         if (newState?.roomStatus === 'RUNNING' || newState?.status === 'RUNNING') {
             addLog('SYSTEM: Launch sequence initiated. Redirecting...');
+            
+            // Extract my gameId from the RoomStateDTO teams list!
+            if (newState.teams) {
+                for (const t of newState.teams) {
+                    const players = t.members || t.players || [];
+                    const me = players.find(p => p.username === currentUser || p.userName === currentUser);
+                    if (me && me.gameId) {
+                        console.log("Assigned Game ID:", me.gameId);
+                        localStorage.setItem("gameId", me.gameId);
+                        break;
+                    }
+                }
+            }
+            
             setTimeout(() => navigate(`/dashboard/${roomId}`), 1500);
         }
     }, [addLog, currentUser, navigate, roomId]);
@@ -135,9 +149,22 @@ export default function RoomWaiting() {
         const initialData = location.state?.initialRoomData;
         if (initialData && (initialData.roomStatus === 'RUNNING' || initialData.status === 'RUNNING')) {
             addLog('SYSTEM: Launch sequence initiated. Redirecting...');
+            
+            if (initialData.teams) {
+                for (const t of initialData.teams) {
+                    const players = t.members || t.players || [];
+                    const me = players.find(p => p.username === currentUser || p.userName === currentUser);
+                    if (me && me.gameId) {
+                        console.log("Assigned Game ID:", me.gameId);
+                        localStorage.setItem("gameId", me.gameId);
+                        break;
+                    }
+                }
+            }
+            
             setTimeout(() => navigate(`/dashboard/${roomId}`), 1500);
         }
-    }, [location.state, navigate, roomId, addLog]);
+    }, [location.state, navigate, roomId, addLog, currentUser]);
 
     // ── WebSocket only (GET /api/room/{id} does not exist on backend) ─────────
     useEffect(() => {

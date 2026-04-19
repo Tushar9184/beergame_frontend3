@@ -84,37 +84,34 @@ export default function Dashboard() {
     }
 
     const isRoomMode = !!localStorage.getItem("teamName");
+    const gameId = localStorage.getItem("gameId");
+    
+    // Core Gameplay State via Game WebSocket
+    const socketId = (isRoomMode && gameId) ? gameId : roomId;
+
+    console.log("Dashboard connecting Game socket:", socketId);
+    connectSocket({
+      roomId: socketId,
+      onStateUpdate: (newState) => {
+        console.log("Dashboard received game state:", newState);
+        setGameState(newState);
+        localStorage.setItem(`gameState_${socketId}`, JSON.stringify(newState));
+      },
+    });
 
     if (isRoomMode) {
-      console.log("Dashboard connecting Room socket:", roomId);
-      // We import connectRoomSocket
+      console.log("Dashboard connecting Room socket for results:", roomId);
+      // We only use connectRoomSocket to listen for the final result broadcast
       import("../services/socket").then(({ connectRoomSocket, disconnectRoomSocket }) => {
         connectRoomSocket({
           roomId,
-          onStateUpdate: (newState) => {
-            console.log("Dashboard received room state:", newState);
-            setGameState(newState);
-            localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
-            
-            // Note: If roomStatus goes 'FINISHED' here but RoomResult isn't received yet, 
-            // the UI might pause. We let the onRoomResult handle the redirection!
-          },
+          onStateUpdate: () => {}, // We don't care about RoomStateDTO here, we just want GameStateDTO
           onRoomResult: (result) => {
             console.log("Dashboard received room result. Redirecting...", result);
             localStorage.setItem("roomResult", JSON.stringify(result));
             navigate("/roomresult", { replace: true });
           }
         });
-      });
-    } else {
-      console.log("Dashboard connecting Game socket:", roomId);
-      connectSocket({
-        roomId,
-        onStateUpdate: (newState) => {
-          console.log("Dashboard received state:", newState);
-          setGameState(newState);
-          localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
-        },
       });
     }
 
@@ -123,7 +120,9 @@ export default function Dashboard() {
 
     return () => {
       disconnectSocket();
-      import("../services/socket").then(({ disconnectRoomSocket }) => disconnectRoomSocket());
+      if (isRoomMode) {
+        import("../services/socket").then(({ disconnectRoomSocket }) => disconnectRoomSocket());
+      }
       document.body.style.backgroundColor = ""; // Reset on navigate away
     };
   }, [roomId, navigate]);
@@ -135,7 +134,9 @@ export default function Dashboard() {
   useEffect(() => {
     // We only rely on this for Single Player Mode (gameStatus is FINISHED).
     // In Room Mode, roomStatus logic is handled by onRoomResult.
-    if (gameStatus === 'FINISHED') {
+    const isRoomMode = !!localStorage.getItem("teamName");
+
+    if (gameStatus === 'FINISHED' && !isRoomMode) {
       const myRole = localStorage.getItem("role");
       const me = players?.find((p) => p.role?.toUpperCase() === myRole?.toUpperCase());
       const correctGameId = me?.gameId || gameState.gameId;

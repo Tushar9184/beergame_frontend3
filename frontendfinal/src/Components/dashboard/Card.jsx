@@ -116,8 +116,14 @@ export default function Card({ role, roomId, gameState = {} }) {
             </button>
           </div>
 
-          <button type="submit" className="submit-order-btn" disabled={me?.isReadyForNextTurn}>
-            {me?.isReadyForNextTurn
+          <button 
+            type="submit" 
+            className="submit-order-btn" 
+            disabled={me?.isReadyForNextTurn || gameState.gameStatus === 'FINISHED'}
+          >
+            {gameState.gameStatus === 'FINISHED' 
+              ? "🎉 Game Finished! Waiting for other teams..."
+              : me?.isReadyForNextTurn
               ? "✅ Order Submitted — Waiting for others..."
               : `✔ Submit Order for Week ${gameState.currentWeek}`
             }
