@@ -16,6 +16,8 @@ import GameResults from "./pages/GameResults"
 import CreateRoom from "./pages/CreateRoom";
 import JoinRoom from "./pages/JoinRoom";
 import RoomWaiting from "./pages/RoomWaiting";
+import RoomResults from "./pages/RoomResults";
+
 const RootElement = () => {
   const token = localStorage.getItem("token");
   return token ? <HomePage /> : <LandingPage />;
@@ -36,10 +38,9 @@ const router = createBrowserRouter([
   { path: "/gameresult", element: <GameResults /> },
   { path: "/createroom", element: <CreateRoom /> },
   { path: "/joinroom", element: <JoinRoom /> },
-  { path: "/room/:roomId", element: <RoomWaiting /> }
-
+  { path: "/room/:roomId", element: <RoomWaiting /> },
+  { path: "/roomresult", element: <RoomResults /> }
 ]);
-
 
 export default function App() {
   return <RouterProvider router={router} />;

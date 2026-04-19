@@ -83,39 +83,61 @@ export default function Dashboard() {
       return;
     }
 
-    console.log("Dashboard connecting socket:", roomId);
-    connectSocket({
-      roomId,
-      onStateUpdate: (newState) => {
-        console.log("Dashboard received state:", newState);
-        setGameState(newState);
-        localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
-      },
-    });
+    const isRoomMode = !!localStorage.getItem("teamName");
+
+    if (isRoomMode) {
+      console.log("Dashboard connecting Room socket:", roomId);
+      // We import connectRoomSocket
+      import("../services/socket").then(({ connectRoomSocket, disconnectRoomSocket }) => {
+        connectRoomSocket({
+          roomId,
+          onStateUpdate: (newState) => {
+            console.log("Dashboard received room state:", newState);
+            setGameState(newState);
+            localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
+            
+            // Note: If roomStatus goes 'FINISHED' here but RoomResult isn't received yet, 
+            // the UI might pause. We let the onRoomResult handle the redirection!
+          },
+          onRoomResult: (result) => {
+            console.log("Dashboard received room result. Redirecting...", result);
+            localStorage.setItem("roomResult", JSON.stringify(result));
+            navigate("/roomresult", { replace: true });
+          }
+        });
+      });
+    } else {
+      console.log("Dashboard connecting Game socket:", roomId);
+      connectSocket({
+        roomId,
+        onStateUpdate: (newState) => {
+          console.log("Dashboard received state:", newState);
+          setGameState(newState);
+          localStorage.setItem(`gameState_${roomId}`, JSON.stringify(newState));
+        },
+      });
+    }
 
     // Dark layout override for Dashboard specifically to prevent white bleeding
     document.body.style.backgroundColor = "#070b11";
 
     return () => {
       disconnectSocket();
+      import("../services/socket").then(({ disconnectRoomSocket }) => disconnectRoomSocket());
       document.body.style.backgroundColor = ""; // Reset on navigate away
     };
   }, [roomId, navigate]);
 
   // --- Extract data ---
-  const { currentWeek, players, festiveWeeks, gameStatus } = gameState;
+  const { currentWeek, players, teams, festiveWeeks, gameStatus, roomStatus } = gameState;
 
-  // --- Game End Redirection Logic ---
+  // --- Game End Redirection Logic (Single Player Mode) ---
   useEffect(() => {
+    // We only rely on this for Single Player Mode (gameStatus is FINISHED).
+    // In Room Mode, roomStatus logic is handled by onRoomResult.
     if (gameStatus === 'FINISHED') {
-
-      // 1. Find 'me' in the players list
       const myRole = localStorage.getItem("role");
-      const me = players.find((p) => p.role?.toUpperCase() === myRole?.toUpperCase());
-
-      // 2. CRITICAL FIX: Get the ID from the PLAYER object first.
-      // In Room Mode: me.gameId will be the actual Game ID (e.g., "ABC..."), 
-      // while gameState.gameId might be the Room ID (e.g., "QSL...").
+      const me = players?.find((p) => p.role?.toUpperCase() === myRole?.toUpperCase());
       const correctGameId = me?.gameId || gameState.gameId;
 
       if (correctGameId) {

@@ -34,6 +34,7 @@ export default function JoinLobby() {
       localStorage.setItem("roomId", returnedId);
       localStorage.setItem("role", uppercaseRole);
       localStorage.setItem("username", username);
+      localStorage.removeItem("teamName"); // Prevents Room Mode from triggering
 
       // --- 💡 FIX 2: Store the FULL game state ---
       // This state includes all players who have joined so far

@@ -125,7 +125,11 @@ export function disconnectSocket() {
   };
 }
 
-export function connectRoomSocket({ roomId, onStateUpdate }) {
+let currentOnRoomResult = (result) => {
+  console.log("WS: unhandled room result", result);
+};
+
+export function connectRoomSocket({ roomId, onStateUpdate, onRoomResult }) {
   if (!roomId) {
     console.error("WS (Room): Missing roomId");
     return;
@@ -142,6 +146,7 @@ export function connectRoomSocket({ roomId, onStateUpdate }) {
     "https://the-beer-game-backend.onrender.com";
 
   currentOnStateUpdate = onStateUpdate;
+  if (onRoomResult) currentOnRoomResult = onRoomResult;
 
   if (stompClient && stompClient.connected && activeRoomId === roomId) {
     console.log("WS (Room) already active, callback updated for:", roomId);
@@ -150,7 +155,11 @@ export function connectRoomSocket({ roomId, onStateUpdate }) {
 
   try {
     if (currentSubscription) {
-      currentSubscription.unsubscribe();
+      if (Array.isArray(currentSubscription)) {
+        currentSubscription.forEach((s) => s.unsubscribe());
+      } else {
+        currentSubscription.unsubscribe();
+      }
       currentSubscription = null;
     }
     if (stompClient) {
@@ -176,12 +185,16 @@ export function connectRoomSocket({ roomId, onStateUpdate }) {
 
       if (currentSubscription) {
         try {
-          currentSubscription.unsubscribe();
+          if (Array.isArray(currentSubscription)) {
+            currentSubscription.forEach((s) => s.unsubscribe());
+          } else {
+             currentSubscription.unsubscribe();
+          }
         } catch {}
         currentSubscription = null;
       }
 
-      currentSubscription = stompClient.subscribe(
+      const subState = stompClient.subscribe(
         `/topic/room/${roomId}`,
         (msg) => {
           try {
@@ -194,7 +207,23 @@ export function connectRoomSocket({ roomId, onStateUpdate }) {
         }
       );
 
+      const subResult = stompClient.subscribe(
+        `/topic/room/${roomId}/result`,
+        (msg) => {
+          try {
+            const body = JSON.parse(msg.body);
+            console.log("📥 WS ROOM RESULT:", body);
+            currentOnRoomResult(body);
+          } catch (err) {
+            console.error("WS parse result error:", err);
+          }
+        }
+      );
+
+      currentSubscription = [subState, subResult];
+
       console.log("📡 Subscribed →", `/topic/room/${roomId}`);
+      console.log("📡 Subscribed →", `/topic/room/${roomId}/result`);
     },
 
     onStompError: (frame) => {
@@ -229,4 +258,21 @@ export function sendOrderWS({ roomId, quantity }) {
   });
 
   console.log("📤 Sent order:", quantity);
+}
+
+export function sendRoomOrderWS({ roomId, quantity }) {
+  if (!stompClient || !stompClient.connected) {
+    console.warn("WS not connected — can't send room order");
+    return;
+  }
+
+  stompClient.publish({
+    destination: `/app/room/${roomId}/placeOrder`,
+    body: JSON.stringify({ orderAmount: Number(quantity) }),
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+
+  console.log("📤 Sent room order:", quantity);
 }

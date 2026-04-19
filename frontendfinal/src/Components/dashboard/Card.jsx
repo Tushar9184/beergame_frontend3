@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { sendOrderWS } from "../../services/socket";
+import { sendOrderWS, sendRoomOrderWS } from "../../services/socket";
 import "./Card.css";
 
 export default function Card({ role, roomId, gameState = {} }) {
@@ -35,7 +35,12 @@ export default function Card({ role, roomId, gameState = {} }) {
       console.warn("No roomId found - cannot send order");
       return;
     }
-    sendOrderWS({ roomId, quantity: orderQty });
+    const isRoomMode = !!localStorage.getItem("teamName");
+    if (isRoomMode) {
+      sendRoomOrderWS({ roomId, quantity: orderQty });
+    } else {
+      sendOrderWS({ roomId, quantity: orderQty });
+    }
   };
 
   // Format cost for display

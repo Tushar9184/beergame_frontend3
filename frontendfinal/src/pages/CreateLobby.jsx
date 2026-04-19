@@ -36,6 +36,7 @@ export default function CreateLobby() {
       localStorage.setItem("roomId", roomId);
       localStorage.setItem("username", username);
       localStorage.setItem(`gameState_${roomId}`, JSON.stringify(data));
+      localStorage.removeItem("teamName"); // Prevents Room Mode from triggering
 
       navigate(`/lobby/${roomId}`);
 
