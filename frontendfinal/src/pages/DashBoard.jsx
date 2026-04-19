@@ -93,7 +93,13 @@ export default function Dashboard() {
       },
     });
 
-    return () => disconnectSocket();
+    // Dark layout override for Dashboard specifically to prevent white bleeding
+    document.body.style.backgroundColor = "#070b11";
+
+    return () => {
+      disconnectSocket();
+      document.body.style.backgroundColor = ""; // Reset on navigate away
+    };
   }, [roomId, navigate]);
 
   // --- Extract data ---

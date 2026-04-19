@@ -10,7 +10,7 @@ const JoinRoom = () => {
     
     // Form State
     const [roomId, setRoomId] = useState('');
-    const [username, setUsername] = useState('');
+    const username = localStorage.getItem("username") || '';
     const [teamName, setTeamName] = useState('');
     const [selectedRole, setSelectedRole] = useState(ROLES[0]);
     const [isLoading, setIsLoading] = useState(false);
@@ -47,9 +47,6 @@ const JoinRoom = () => {
                 
                 <label className="label-text">Room ID</label>
                 <input className="room-input" value={roomId} onChange={(e) => setRoomId(e.target.value)} placeholder="e.g. GAME-1" />
-
-                <label className="label-text">Username</label>
-                <input className="room-input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your Name" />
 
                 <label className="label-text">Team Name</label>
                 <input className="room-input" value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="e.g. ALPHA" />

@@ -78,7 +78,7 @@ export default function Card({ role, roomId, gameState = {} }) {
           {/* 2. BACKLOG */}
           <div className="stat-box">
               <p>⚠️ Backlog</p>
-              <h2>{me.backlog ?? 0} units</h2>
+              <h2>{me.backOrder ?? me.backlog ?? 0} units</h2>
           </div>
           {/* 3. INCOMING SHIPMENT */}
           <div className="stat-box">

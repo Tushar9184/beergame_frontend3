@@ -9,8 +9,8 @@ const CreateRoom = () => {
     const navigate = useNavigate();
     
     // Pre-fill from localStorage — user is already authenticated, no need to retype
-    const [username, setUsername] = useState(localStorage.getItem("username") || '');
-    const [email, setEmail] = useState(localStorage.getItem("email") || '');
+    const username = localStorage.getItem("username") || '';
+    const email = localStorage.getItem("email") || '';
     
     // Team Details (Host's Seat)
     const [teamName, setTeamName] = useState('');
@@ -24,7 +24,7 @@ const CreateRoom = () => {
         setIsLoading(true);
         try {
             // STEP 1: Create the Room (Get ID)
-            const roomData = await createGameRoom();
+            const roomData = await createGameRoom(username, email);
             const newRoomId = roomData.id || roomData.roomId; // Fallback for either format
             
             // STEP 2: Immediately Join that Room
@@ -55,26 +55,7 @@ const CreateRoom = () => {
                 <h1 className="room-title">Create Room 🏭</h1>
                 <p className="room-subtitle">Host a 16-player simulation</p>
                 
-                {/* --- Host Info --- */}
-                <label className="label-text">Username</label>
-                <input 
-                    className="room-input"
-                    type="text" 
-                    placeholder="Enter Username" 
-                    value={username} 
-                    onChange={(e) => setUsername(e.target.value)} 
-                />
-
-                <label className="label-text">Email</label>
-                <input 
-                    className="room-input"
-                    type="email" 
-                    placeholder="host@example.com" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                />
-
-                <hr style={{margin: '20px 0', border: '0', borderTop: '1px solid #eee'}} />
+                {/* --- Auto-fetched Username/Email --- */}
 
                 {/* --- Team Info (New Part) --- */}
                 <label className="label-text">Your Team Name</label>
