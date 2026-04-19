@@ -167,8 +167,13 @@ export default function RoomWaiting() {
         localStorage.setItem('role', targetRole);
 
         try {
-            await switchRole(roomId, targetTeam, targetRole);
+            const newState = await switchRole(roomId, targetTeam, targetRole);
             addLog(`SYSTEM: Transfer confirmed → ${targetTeam} / ${targetRole}`);
+            
+            // Instantly sync with exact backend DTO return — 0 ms delay!
+            if (newState) {
+                applyState(newState);
+            }
         } catch (err) {
             addLog('SYSTEM: Transfer failed. Reverting...');
             alert('Failed to switch seat. Role may be taken.');
