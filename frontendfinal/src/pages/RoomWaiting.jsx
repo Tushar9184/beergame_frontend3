@@ -14,8 +14,7 @@ const REQUIRED_PLAYERS = 16;
  * PlayerAssignmentDTO exact fields (from Java backend):
  *   - username        (the player's login name)
  *   - initialTeamName (the team name string)
- *   - assignedRole    (RoleType enum → serialized as "RETAILER", "MANUFACTURER" etc.)
- *   - gameId, isReady
+ *   - assignedRole    (RoleType enum)
  */
 function parseRoomState(newState) {
     const slots = {};
@@ -23,28 +22,28 @@ function parseRoomState(newState) {
 
     if (!newState) return { slots, teams };
 
-    // ── Scenario A: flat players list (RoomStateDTO with PlayerAssignmentDTO[]) ──
+    // ── Scenario A: flat players list (Older DTO fallback) ──
     if (newState.players && newState.players.length > 0) {
         newState.players.forEach(p => {
-            // EXACT DTO field: assignedRole (Players.RoleType enum as string)
             const role = (p.assignedRole || p.role || '').toUpperCase();
-            // EXACT DTO field: initialTeamName
             const team = (p.initialTeamName || p.teamName || '').toUpperCase().trim();
             if (!role || !team) return;
             const key = `${role}_${team}`;
-            // EXACT DTO field: username (lowercase u)
             slots[key] = p.username || p.userName || '?';
             teams.add(team);
         });
     }
 
-    // ── Scenario B: nested teams list (GameRoom entity / WebSocket payload) ───
+    // ── Scenario B: nested teams list (New RoomStateDTO and GameRoom entity) ───
     if (newState.teams && newState.teams.length > 0) {
         newState.teams.forEach(t => {
             const team = (t.teamName || t.name || '').toUpperCase().trim();
             if (!team) return;
             teams.add(team);
-            (t.players || []).forEach(p => {
+            
+            // new DTO uses .members, raw entity uses .players
+            const playerList = t.members || t.players || [];
+            playerList.forEach(p => {
                 const role = (p.assignedRole || p.role || p.roleType || '').toUpperCase();
                 if (!role) return;
                 const key = `${role}_${team}`;
