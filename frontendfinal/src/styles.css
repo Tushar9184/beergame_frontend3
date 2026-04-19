@@ -3784,3 +3784,30 @@ body {
     box-shadow: 0 0 42px rgba(235,181,66,0.75) !important;
     transform: translateY(-2px);
 }
+
+/* ───────────────────────────────────────────
+   MOBILE RESPONSIVENESS (MAX 768PX) - GLOBAL FORMS
+─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .login-container {
+      padding: 1.5rem;
+      max-width: 95%;
+      margin: 10px auto;
+  }
+  
+  .login-title {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+  }
+
+  .data-container {
+      flex-direction: column;
+      gap: 15px;
+  }
+
+  .data-box {
+      width: 100%;
+      min-width: 100%;
+  }
+}
+

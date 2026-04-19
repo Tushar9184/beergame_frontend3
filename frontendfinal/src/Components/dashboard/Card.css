@@ -227,3 +227,49 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ───────────────────────────────────────────
+   MOBILE RESPONSIVENESS (MAX 768PX) - EXTENDED
+─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .card-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .card-top h3 {
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+  }
+
+  .stat-box {
+    padding: 1.2rem 1rem;
+  }
+  
+  .stat-box h2 {
+    font-size: 2rem;
+  }
+
+  .card-order-form {
+    padding: 1.5rem;
+  }
+
+  .order-input-controls {
+    max-width: 100%;
+    height: 70px;
+  }
+  
+  .order-input-controls button {
+    flex-basis: 60px;
+    font-size: 2rem;
+  }
+  
+  .order-input-controls input {
+    font-size: 2.2rem;
+  }
+
+  .submit-order-btn {
+    padding: 1.2rem;
+    font-size: 1.1rem;
+    max-width: 100%;
+  }
+}

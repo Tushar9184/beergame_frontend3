@@ -37,20 +37,36 @@ export default function RoomWaiting() {
         const onStateUpdate = (newState) => {
             if (!isMounted) return;
 
-            if (newState && newState.players) {
+            if (newState && (newState.players || newState.teams)) {
                 const newSlots = {};
                 const foundTeams = new Set();
 
-                // Build state from PlayerAssignmentDTO
-                // Needs: username, initialTeamName, assignedRole
-                newState.players.forEach(p => {
-                    const r = p.assignedRole ? p.assignedRole.toUpperCase() : "UNKNOWN";
-                    const t = p.initialTeamName ? p.initialTeamName.toUpperCase() : "TEAM";
-                    const key = `${r}_${t}`;
-
-                    newSlots[key] = p.username;
-                    foundTeams.add(t);
-                });
+                // Build state depending on the JSON structure from backend
+                // Scenario A: Flat players list
+                if (newState.players) {
+                    newState.players.forEach(p => {
+                        const r = (p.assignedRole || p.role || "UNKNOWN").toUpperCase();
+                        const t = (p.initialTeamName || p.teamName || "TEAM").toUpperCase();
+                        const key = `${r}_${t}`;
+                        newSlots[key] = p.username;
+                        foundTeams.add(t);
+                    });
+                } 
+                // Scenario B: Nested teams list (GameRoom Entity structure)
+                else if (newState.teams) {
+                    newState.teams.forEach(team => {
+                        const t = (team.teamName || team.name || "TEAM").toUpperCase();
+                        foundTeams.add(t);
+                        if (team.players) {
+                            team.players.forEach(p => {
+                                // Fallback role properties based on Java Enums
+                                const r = (p.roleType || p.role || "UNKNOWN").toUpperCase();
+                                const key = `${r}_${t}`;
+                                newSlots[key] = p.userName || p.username;
+                            });
+                        }
+                    });
+                }
 
                 // Detect new players for activity log
                 setOccupiedSlots(prev => {

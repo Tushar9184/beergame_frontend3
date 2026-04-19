@@ -436,3 +436,58 @@
   font-size: 0.8rem;
   color: #64748b;
 }
+
+/* ───────────────────────────────────────────
+   MOBILE RESPONSIVENESS (MAX 768PX)
+─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Tactical Lobby Wrapping */
+  .tactical-wrapper {
+    flex-direction: column;
+  }
+  
+  .tactical-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .tactical-main {
+    padding: 20px;
+  }
+
+  .tactical-header-container {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .tactical-room-code {
+    text-align: left;
+  }
+
+  /* Grid scaling */
+  .tactical-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Stack Main Content and Activity Log */
+  .tactical-content-split {
+    flex-direction: column;
+  }
+  
+  .tactical-right-panel {
+    min-width: 100%;
+  }
+
+  .tactical-overlay-bottom {
+    flex-direction: column;
+    padding: 15px;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .waiting-marquee {
+    font-size: 1rem;
+  }
+}
