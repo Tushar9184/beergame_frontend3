@@ -125,23 +125,19 @@ export const getRoomState = async (roomId) => {
     return null; 
   }
 };
-export const switchRole = async (roomId, newTeamName, newRole, username) => {
+export const switchRole = async (roomId, newTeamName, newRole) => {
   try {
-    // If your backend has a specific "move" endpoint, use that.
-    // Otherwise, re-calling 'join' usually updates the player's position.
+    // JoinRoomRequestDTO only expects: { teamName, role }
+    // username comes from JWT token via @AuthenticationPrincipal
     const res = await myAxios.post(`/api/room/${roomId}/join`, {
-      username,
       teamName: newTeamName,
       role: newRole.toUpperCase()
     });
-    
-    // Update local storage so we remember the new spot
-    localStorage.setItem("teamName", newTeamName);
-    localStorage.setItem("role", newRole);
-    
+    localStorage.setItem('teamName', newTeamName);
+    localStorage.setItem('role', newRole.toUpperCase());
     return res.data;
   } catch (err) {
-    console.error("❌ Error switching role:", err);
+    console.error('❌ Error switching role:', err);
     throw err;
   }
 };

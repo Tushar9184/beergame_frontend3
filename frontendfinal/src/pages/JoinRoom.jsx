@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { joinGameRoom } from '../services/user-service';
 import './room.css';
 
-const ROLES = ['Manufacturer', 'Wholesaler', 'Distributor', 'Retailer'];
+const ROLES = ['MANUFACTURER', 'WHOLESALER', 'DISTRIBUTOR', 'RETAILER'];
 
 const JoinRoom = () => {
     const navigate = useNavigate();
@@ -16,7 +16,7 @@ const JoinRoom = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleJoin = async () => {
-        if (!roomId || !username || !teamName) return alert("All fields are required");
+        if (!roomId || !teamName) return alert("Room ID and Team Name are required");
 
         setIsLoading(true);
         try {
@@ -25,8 +25,9 @@ const JoinRoom = () => {
 
             // 2. Local Storage
             localStorage.setItem("username", username);
-            localStorage.setItem("teamName", teamName);
-            localStorage.setItem("role", selectedRole);
+            localStorage.setItem("teamName", teamName.toUpperCase());
+            localStorage.setItem("role", selectedRole.toUpperCase());
+            localStorage.setItem("roomId", roomId);
 
             // 3. Navigate with initial backend state!
             navigate(`/room/${roomId}`, { state: { initialRoomData: joinedRoomData } });

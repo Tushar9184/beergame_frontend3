@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { switchRole, getRoomState } from '../services/user-service';
+import { switchRole } from '../services/user-service';
 import { connectRoomSocket, disconnectRoomSocket } from '../services/socket';
 import './room.css';
 
@@ -58,27 +58,33 @@ export default function RoomWaiting() {
     const myTeamName      = localStorage.getItem('teamName') || '';
     const myRole          = localStorage.getItem('role') || '';
 
-    // Seed the state immediately from the data passed via navigate() state,
-    // so the grid is correct on the very first render — no WebSocket wait.
+    // Seed state: always show current user from localStorage immediately,
+    // then overlay with any richer data from navigate state
     const seedState = () => {
-        const initialData = location.state?.initialRoomData;
-        if (initialData) {
-            return parseRoomState(initialData);
-        }
-        // Fall back: pre-fill our own slot while HTTP fetch runs
-        const preSlots = {};
-        const preTeams = new Set();
+        const slots = {};
+        const teams = new Set();
+
+        // 1. Always pre-fill the current user's own seat from localStorage
         if (myTeamName && myRole) {
             const key = `${myRole.toUpperCase()}_${myTeamName.toUpperCase()}`;
-            preSlots[key] = currentUser;
-            preTeams.add(myTeamName.toUpperCase());
+            slots[key] = currentUser;
+            teams.add(myTeamName.toUpperCase());
         }
-        return { slots: preSlots, teams: preTeams };
+
+        // 2. If navigate() passed richer initialRoomData, overlay it on top
+        const initialData = location.state?.initialRoomData;
+        if (initialData) {
+            const { slots: dtoSlots, teams: dtoTeams } = parseRoomState(initialData);
+            Object.assign(slots, dtoSlots);
+            dtoTeams.forEach(t => teams.add(t));
+        }
+
+        return { slots, teams };
     };
 
     const seed = seedState();
     const [occupiedSlots, setOccupiedSlots] = useState(seed.slots);
-    const [teamsFound,    setTeamsFound]    = useState(Array.from(seed.teams));
+    const [teamsFound,    setTeamsFound]    = useState(Array.from(seed.teams).sort());
     const [isSwitching,   setIsSwitching]   = useState(false);
 
     // Activity Log
@@ -96,6 +102,7 @@ export default function RoomWaiting() {
     const applyState = useCallback((newState) => {
         const { slots: newSlots, teams: newTeamSet } = parseRoomState(newState);
 
+        // Don't wipe existing UI if WS sends empty payload
         if (Object.keys(newSlots).length === 0 && newTeamSet.size === 0) return;
 
         setOccupiedSlots(prev => {
@@ -104,10 +111,14 @@ export default function RoomWaiting() {
                     addLog(`${newSlots[key]} → ${key.replace('_', ' / ')}`);
                 }
             });
-            return newSlots;
+            // MERGE new data on top of existing — prevents flickering
+            return { ...prev, ...newSlots };
         });
 
-        setTeamsFound(Array.from(newTeamSet).sort());
+        setTeamsFound(prev => {
+            const merged = new Set([...prev, ...Array.from(newTeamSet)]);
+            return Array.from(merged).sort();
+        });
 
         // Navigate when game starts
         if (newState?.roomStatus === 'RUNNING' || newState?.status === 'RUNNING') {
@@ -116,10 +127,9 @@ export default function RoomWaiting() {
         }
     }, [addLog, currentUser, navigate, roomId]);
 
-    // ── WebSocket + initial HTTP fetch ────────────────────────────────────────
+    // ── WebSocket only (GET /api/room/{id} does not exist on backend) ─────────
     useEffect(() => {
         let isMounted = true;
-
         if (!roomId) return;
 
         connectRoomSocket({
@@ -127,21 +137,8 @@ export default function RoomWaiting() {
             onStateUpdate: (state) => { if (isMounted) applyState(state); },
         });
 
-        // HTTP fetch for fresh state (handles players who joined before us)
-        getRoomState(roomId)
-            .then(state => { if (isMounted && state) applyState(state); })
-            .catch(err => console.warn('Initial room state fetch failed:', err));
-
-        // Poll every 4 s as a WebSocket latency fallback
-        const pollInterval = setInterval(() => {
-            getRoomState(roomId)
-                .then(state => { if (isMounted && state) applyState(state); })
-                .catch(() => {});
-        }, 4000);
-
         return () => {
             isMounted = false;
-            clearInterval(pollInterval);
             disconnectRoomSocket();
         };
     }, [roomId, applyState]);
@@ -167,13 +164,17 @@ export default function RoomWaiting() {
         localStorage.setItem('role', targetRole);
 
         try {
-            await switchRole(roomId, targetTeam, targetRole, currentUser);
+            await switchRole(roomId, targetTeam, targetRole);
             addLog(`SYSTEM: Transfer confirmed → ${targetTeam} / ${targetRole}`);
         } catch (err) {
             addLog('SYSTEM: Transfer failed. Reverting...');
-            alert('Failed to switch seat.');
-            // Revert optimistic update by re-fetching
-            getRoomState(roomId).then(s => { if (s) applyState(s); });
+            alert('Failed to switch seat. Role may be taken.');
+            // Revert optimistic update on failure
+            setOccupiedSlots(prev => {
+                const reverted = { ...prev };
+                delete reverted[`${targetRole}_${targetTeam}`];
+                return reverted;
+            });
         } finally {
             setIsSwitching(false);
         }
