@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { switchRole } from '../services/user-service';
+import { switchRole, getRoomState } from '../services/user-service';
 import { connectRoomSocket, disconnectRoomSocket } from '../services/socket';
 import './room.css';
 
@@ -38,31 +38,35 @@ export default function RoomWaiting() {
             if (!isMounted) return;
 
             if (newState && (newState.players || newState.teams)) {
+                console.log("WS PAYLOAD RECEIVED:", newState);
+                
                 const newSlots = {};
                 const foundTeams = new Set();
 
                 // Build state depending on the JSON structure from backend
-                // Scenario A: Flat players list
+                // Scenario A: Flat players list (from RoomStateDTO)
                 if (newState.players) {
                     newState.players.forEach(p => {
-                        const r = (p.assignedRole || p.role || "UNKNOWN").toUpperCase();
-                        const t = (p.initialTeamName || p.teamName || "TEAM").toUpperCase();
+                        const r = (p.role || p.roleType || p.assignedRole || "UNKNOWN").toUpperCase();
+                        // DTO might use teamName or initialTeamName
+                        const t = (p.teamName || p.initialTeamName || p.team || "TEAM").toUpperCase();
                         const key = `${r}_${t}`;
-                        newSlots[key] = p.username;
+                        
+                        // CRITICAL: Backend uses userName, not username
+                        newSlots[key] = p.userName || p.username || "Unknown";
                         foundTeams.add(t);
                     });
                 } 
-                // Scenario B: Nested teams list (GameRoom Entity structure)
+                // Scenario B: Nested teams list (GameRoom Entity structure fallback)
                 else if (newState.teams) {
                     newState.teams.forEach(team => {
                         const t = (team.teamName || team.name || "TEAM").toUpperCase();
                         foundTeams.add(t);
                         if (team.players) {
                             team.players.forEach(p => {
-                                // Fallback role properties based on Java Enums
                                 const r = (p.roleType || p.role || "UNKNOWN").toUpperCase();
                                 const key = `${r}_${t}`;
-                                newSlots[key] = p.userName || p.username;
+                                newSlots[key] = p.userName || p.username || "Unknown";
                             });
                         }
                     });
@@ -89,6 +93,15 @@ export default function RoomWaiting() {
 
         if (roomId) {
             connectRoomSocket({ roomId, onStateUpdate });
+            
+            // Fetch initial state immediately so we don't wait for the next WS broadcast
+            getRoomState(roomId)
+                .then(initialState => {
+                    if (initialState) {
+                        onStateUpdate(initialState);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch initial room state", err));
         }
 
         return () => { 
