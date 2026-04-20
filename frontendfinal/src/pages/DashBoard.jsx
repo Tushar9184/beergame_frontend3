@@ -171,7 +171,7 @@ export default function Dashboard() {
   const playerCustomerDemand = me?.lastOrderReceived ?? 0;
   const myOutgoingOrder      = me?.currentOrder ?? 0;
   // Java records serialize boolean 'isReadyForNextTurn' as 'readyForNextTurn'
-  const iAmReady = me?.readyForNextTurn ?? me?.isReadyForNextTurn ?? false;
+  const iAmReady = me?.readyForNextTurn ?? me?.isReadyForNextTurn ?? me?.readyForOrder ?? false;
   const formattedCost = (me?.weeklyCost ?? 0).toLocaleString('en-US', {
     minimumFractionDigits: 2, maximumFractionDigits: 2
   });
@@ -243,7 +243,7 @@ export default function Dashboard() {
             </h3>
             <ul className="player-status-list" style={{ marginTop: '1rem' }}>
               {players.map((player) => {
-                const isPlayerReady = player.readyForNextTurn ?? player.isReadyForNextTurn ?? false;
+                const isPlayerReady = player.readyForNextTurn ?? player.isReadyForNextTurn ?? player.readyForOrder ?? false;
                 return (
                   <li
                     key={String(player.id ?? player.role ?? player.userName)}

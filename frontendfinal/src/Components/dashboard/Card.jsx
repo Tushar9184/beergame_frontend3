@@ -11,7 +11,7 @@ export default function Card({ role, roomId, gameState = {} }) {
     (gameState.players || []).find(
       (p) => (p.role ?? "").toUpperCase() === roleKey
     ) || {};
-  const isReady = me.readyForNextTurn ?? me.isReadyForNextTurn ?? false;
+  const isReady = me.readyForNextTurn ?? me.isReadyForNextTurn ?? me.readyForOrder ?? false;
 
   const [orderQty, setOrderQty] = useState(me.currentOrder ?? 4);
 
